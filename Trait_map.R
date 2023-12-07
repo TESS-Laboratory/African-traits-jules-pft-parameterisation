@@ -14,7 +14,7 @@ library(sf)
 library(rnaturalearth)
 library(lwgeom)
 library(maps)
-library(RColorBrewer)
+library(RColorBrewer) # not using this (atm)
 
 
 trait_data <- read.csv("workdata_traits.csv")
