@@ -15,6 +15,7 @@ library(rnaturalearth)
 library(lwgeom)
 library(maps)
 library(RColorBrewer) # not using this (atm)
+library(tidyr)
 
 
 trait_data <- read.csv("workdata_traits.csv")
