@@ -114,36 +114,35 @@ ggplot(merged_frequency, aes(x = Trait_New, y = Africa_Percentage, fill = "Afric
 
 # visualizing this as a heat map plot for each one of the eight traits ----
 # Create a heatmap for percentage differences
-ggplot(merged_frequency, aes(x = Trait_New, y = 1, fill = Africa_Percentage)) +
-  geom_tile() +
-  labs(title = "Percentage of Global Traits in Africa",
-       x = "Trait",
-       y = NULL) +
-  scale_fill_gradient(low = "red", high = "green") +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1),
-        axis.ticks = element_blank(),
-        panel.grid.major = element_blank(),
-        panel.grid.minor = element_blank(),
-        panel.border = element_blank(),
-        axis.line = element_blank())
+heat.data2 <- pivot_longer(data = merged_frequency,
+                           cols = -c(1:4),
+                           names_to = "Area",
+                           values_to = "Africa_per")
+
+
+
+(heat.map2 <- ggplot(data = heat.data2, mapping = aes(x = Trait_New,
+                                                      y = Area,
+                                                      fill = Africa_per)) +
+    geom_tile() +
+    xlab(label = "Traits") +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))) 
+
+
 
 
 # Create a heatmap for absolute frequencies
-ggplot(merged_frequency, aes(x = Trait_New, y = 1, fill = Global_Frequency)) +
-  geom_tile() +
-  labs(title = "Absolute Frequencies of Traits in Global and Africa",
-       x = "Trait",
-       y = NULL) +
-  scale_fill_gradient(low = "blue", high = "red") +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1),
-        axis.ticks = element_blank(),
-        panel.grid.major = element_blank(),
-        panel.grid.minor = element_blank(),
-        panel.border = element_blank(),
-        axis.line = element_blank()) +
-  geom_tile(aes(x = Trait_New, y = 2, fill = Africa_Frequency))
+
+heat.data <- pivot_longer(data = merged_frequency,
+                          cols = -c(1,4,5),
+                          names_to = "Area",
+                          values_to = "Abundance")
 
 
+(heat.map <- ggplot(data = heat.data, mapping = aes(x = Trait_New,
+                                                    y = Area,
+                                                    fill = Abundance)) +
+    geom_tile() +
+    xlab(label = "Traits") +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1)))
 
