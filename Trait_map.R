@@ -16,9 +16,10 @@ library(lwgeom)
 library(maps)
 library(RColorBrewer) # not using this (atm)
 library(tidyr)
+library(tidyverse)
 
 
-trait_data <- read.csv("workdata_traits.csv")
+trait_data <- read_csv("workdata_traits.csv")
 View(trait_data)
 
 # Keep only the columns we need ----
