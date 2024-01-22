@@ -96,7 +96,17 @@ ggplot(merged_frequency, aes(x = Trait_New, y = Global_Frequency, fill = "Global
 merged_frequency <- merged_frequency %>%
   mutate(Africa_Percentage = (Africa_Frequency / Global_Frequency) * 100)
 
-# Plot the bar chart with percentage differences
+
+
+# Create a pie chart with percentage of observation in Africa 
+pie(merged_frequency$Africa_Percentage, labels = merged_frequency$Trait_New, 
+    col = rainbow(length(merged_frequency$Trait_New)),
+    main = "Percentage of Traits in Africa", cex = 0.8,
+    label.pos = 0.5,  # Adjust the label position (e.g., 0.5 for diagonal)
+    clockwise = TRUE)  # Set to TRUE for labels to appear clockwise
+
+
+# visualize this as a bar chart
 ggplot(merged_frequency, aes(x = Trait_New, y = Africa_Percentage, fill = "Africa")) +
   geom_bar(stat = "identity") +
   labs(title = "Percentage of Global Traits in Africa",

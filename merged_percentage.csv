@@ -1,0 +1,16 @@
+"Trait","Global_Frequency","Africa_Frequency","Trait_New","Africa_Percentage"
+"Leaf area (in case of compound leaves undefined if leaf or leaflet, undefined if petiole is in- or excluded)",53541,2731,"LA(undefined)",5.10076390056219
+"Leaf area (in case of compound leaves: leaf, petiole excluded)",40084,4874,"LA(leaf, petiole ex)",12.1594651232412
+"Leaf area (in case of compound leaves: leaf, petiole included)",49547,3776,"LA(leaf, petiole in)",7.6210466829475
+"Leaf area (in case of compound leaves: leaf, undefined if petiole in- or excluded)",19365,1007,"LA(leaf, petiole undefined)",5.2001032791118
+"Leaf area (in case of compound leaves: leaflet, petiole excluded)",53103,2397,"LA(leaflet, petiole ex)",4.51386927292243
+"Leaf area (in case of compound leaves: leaflet, petiole included)",12380,4,"LA(leaflet, petiole in)",0.0323101777059774
+"Leaf area (in case of compound leaves: leaflet, undefined if petiole is in- or excluded)",22495,1637,"LA(leaflet, petiole undefined)",7.27717270504557
+"Leaf area per leaf dry mass (specific leaf area, SLA or 1/LMA): petiole excluded",58476,4782,"SLA(petiole ex)",8.17771393392161
+"Leaf area per leaf dry mass (specific leaf area, SLA or 1/LMA): petiole included",78222,5821,"SLA(petiole in)",7.44164045920585
+"Leaf area per leaf dry mass (specific leaf area, SLA or 1/LMA): undefined if petiole is in- or excluded",161078,6378,"SLA(petiole undefined)",3.95957238108246
+"Leaf lifespan (longevity)",2741,2,"LLS",0.0729660707770887
+"Leaf nitrogen (N) content per leaf",1674,157,"Leaf(N)",9.37873357228196
+"Photosynthesis carboxylation capacity (Vcmax) per leaf area (Farquhar model)",8099,1636,"Vcmax/LA",20.2000246944067
+"Photosynthesis carboxylation capacity (Vcmax) per leaf dry mass (Farquhar model)",5622,1237,"Vcmax/LMA",22.002845962291
+"Root rooting depth",4940,536,"Root rooting depth",10.8502024291498
