@@ -10,6 +10,8 @@ if (!requireNamespace("sf", quietly = TRUE)) install.packages("sf")
 if (!requireNamespace("rnaturalearth", quietly = TRUE)) install.packages("rnaturalearth")
 if (!requireNamespace("lwgeom", quietly = TRUE)) install.packages("lwgeom")
 if (!requireNamespace("maps", quietly = TRUE)) install.packages("maps")
+if (!requireNamespace("plotrix", quietly = TRUE)) install.packages("plotrix")
+library(plotrix)
 library(sf)
 library(rnaturalearth)
 library(lwgeom)
@@ -17,6 +19,7 @@ library(maps)
 library(RColorBrewer) # not using this (atm)
 library(tidyr)
 library(tidyverse)
+library(patchwork)
 
 
 trait_data <- read_csv("workdata_traits.csv")
@@ -106,6 +109,36 @@ trait_africa <- st_intersection(trait_sf, africa)
    labs(x = "Longitude", y = "Latitude", color = "Trait") +
    guides(color = guide_legend(title = "Trait")))
 
+
+
+
+
+# Make separate plots for each trait in the African region ----
+trait_plots_africa <- list()
+
+# Define alphabet letters
+letters <- LETTERS[1:length(unique(trait_africa$TraitName))]
+
+for (i in seq_along(unique(trait_africa$TraitName))) {
+  trait <- unique(trait_africa$TraitName)[i]
+  trait_plot <- ggplot() +
+    geom_sf(data = africa, fill = NA, color = "black") +
+    geom_sf(data = filter(trait_africa, TraitName == trait), aes(color = TraitName)) +
+    coord_sf() +
+    theme_void() +
+    labs(x = "Longitude", y = "Latitude", color = "Trait") +
+    guides(color = guide_legend(title = paste(letters[i]))) +  # Set legend title
+    ggtitle(letters[i]) +  # Use alphabet letters as titles
+    theme(legend.position = "right")  # Position legend on the right
+  
+  trait_plots_africa[[as.character(trait)]] <- trait_plot
+}
+
+# Combine and display the plots on a single page with a common legend
+trait_plots_africa_combined <- wrap_plots(trait_plots_africa, ncol = 4) +
+  plot_layout(ncol = 4, guides = 'collect')  # Adjust the number of columns as needed
+
+trait_plots_africa_combined
 
 
 
