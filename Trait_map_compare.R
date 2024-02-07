@@ -4,7 +4,7 @@ print("Global Frequency Table:")
 print(global_frequency)
 
 # Frequency table for the filtered dataset with only African countries
-africa_frequency <- table(trait_africa$TraitName)
+africa_frequency <- table(trait_workdata$TraitName)
 print("African Countries Frequency Table:")
 print(africa_frequency)
 
