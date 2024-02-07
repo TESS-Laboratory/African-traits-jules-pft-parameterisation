@@ -6,11 +6,6 @@ library(rgdal)  # readOGR() spTransform()
 library(raster)  # intersect()
 library(ggsn)  # north2() scalebar()
 library(rworldmap)  # getMap()
-if (!requireNamespace("sf", quietly = TRUE)) install.packages("sf")
-if (!requireNamespace("rnaturalearth", quietly = TRUE)) install.packages("rnaturalearth")
-if (!requireNamespace("lwgeom", quietly = TRUE)) install.packages("lwgeom")
-if (!requireNamespace("maps", quietly = TRUE)) install.packages("maps")
-if (!requireNamespace("plotrix", quietly = TRUE)) install.packages("plotrix")
 library(plotrix)
 library(sf)
 library(rnaturalearth)
@@ -23,7 +18,7 @@ library(patchwork)
 
 
 trait_data <- read_csv("workdata_traits.csv")
-View(trait_data)
+
 
 # Keep only the columns we need ----
 vars <- c("AccSpeciesName", "TraitName", "StdValue", "Latitude",
@@ -31,9 +26,6 @@ vars <- c("AccSpeciesName", "TraitName", "StdValue", "Latitude",
 
 trait_workdata<- trait_data %>% dplyr::select(one_of(vars))
 
-## Check column names and content ----
-
-View(trait_workdata)
 
 # Make a prelim plot ----
 
@@ -87,23 +79,16 @@ world_sf <- st_as_sf(world)
 
 ## Get world map data and filter for African countries ----
 world <- ne_countries(scale = "medium", returnclass = "sf")
-africa <- world[world$continent == "Africa", ]
-
-### Set the CRS for both datasets ----
-africa <- st_set_crs(africa, st_crs(trait_data))
-
-
-# Convert trait data to sf object
-trait_sf <- st_as_sf(trait_data, coords = c("Longitude", "Latitude"))
-
-# Filter trait data for points within Africa
-trait_africa <- st_intersection(trait_sf, africa)
-
+africa <- sf::st_make_valid(world[world$continent == "Africa", ])
+trait_workdata <- trait_data %>% dplyr::select(one_of(vars))
+trait_workdata <- trait_workdata %>%
+  sf::st_as_sf(coords = c("Longitude", "Latitude"), crs = 4326, remove = FALSE) %>%
+  sf::st_filter(africa)
 
 ## Plot map with country borders and data points ----
 (ggplot() +
    geom_sf(data = africa, fill = NA, color = "black") +
-   geom_sf(data = trait_africa, aes(color = TraitName)) +
+   geom_sf(data = trait_workdata, aes(color = TraitName)) +
    coord_sf() +
    theme_void() +
    labs(x = "Longitude", y = "Latitude", color = "Trait") +
@@ -117,13 +102,13 @@ trait_africa <- st_intersection(trait_sf, africa)
 trait_plots_africa <- list()
 
 # Define alphabet letters
-letters <- LETTERS[1:length(unique(trait_africa$TraitName))]
+letters <- LETTERS[1:length(unique(trait_workdata$TraitName))]
 
-for (i in seq_along(unique(trait_africa$TraitName))) {
-  trait <- unique(trait_africa$TraitName)[i]
+for (i in seq_along(unique(trait_workdata$TraitName))) {
+  trait <- unique(trait_workdata$TraitName)[i]
   trait_plot <- ggplot() +
     geom_sf(data = africa, fill = NA, color = "black") +
-    geom_sf(data = filter(trait_africa, TraitName == trait), aes(color = TraitName)) +
+    geom_sf(data = filter(trait_workdata, TraitName == trait), aes(color = TraitName)) +
     coord_sf() +
     theme_void() +
     labs(x = "Longitude", y = "Latitude", color = "Trait") +
@@ -139,6 +124,22 @@ trait_plots_africa_combined <- wrap_plots(trait_plots_africa, ncol = 4) +
   plot_layout(ncol = 4, guides = 'collect')  # Adjust the number of columns as needed
 
 trait_plots_africa_combined
+
+
+
+
+# Make Africa map of traits ----
+ggplot(trait_workdata) +
+  aes(x = Longitude, y = Latitude) +
+  geom_sf(
+    data = africa, aes(geometry = geometry),
+    fill = NA, color = "black", inherit.aes = FALSE, lwd = 0.2
+  ) + # Add country borders
+  geom_hex(binwidth = 10, alpha=0.6) +
+  scale_fill_viridis_c() +
+  facet_wrap(~TraitName, ncol = 5, labeller = label_wrap_gen(width = 30)) +  # Adjust width as needed
+  theme_classic() +
+  theme(strip.text = element_text(size = 7, angle = 0, hjust = 0.9))  # Adjust size and angle as needed
 
 
 
