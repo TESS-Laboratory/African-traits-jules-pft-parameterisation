@@ -156,3 +156,66 @@ heat.data <- pivot_longer(data = merged_frequency,
     xlab(label = "Traits") +
     theme(axis.text.x = element_text(angle = 45, hjust = 1)))
 
+
+
+
+# Density ------------------------------------------------------------------
+## combined density for each traits --------------------------------------------------------------------------
+# Convert items to factor with meaningful labels
+merged_frequency$Trait_New <- factor(merged_frequency$Trait_New, levels = unique(merged_frequency$Trait_New), labels = unique(merged_frequency$Trait_New))
+
+# Create numeric labels for traits
+numeric_labels <- seq_along(unique(merged_frequency$Trait_New))
+
+# Create density estimate for Global_Frequency
+expanded_data_global <- rep(numeric_labels, merged_frequency$Global_Frequency)
+dens_global <- density(expanded_data_global)
+
+# Create density estimate for Africa_Frequency
+expanded_data_africa <- rep(numeric_labels, merged_frequency$Africa_Frequency)
+dens_africa <- density(expanded_data_africa)
+
+# Plot density for Global_Frequency
+plot(dens_global, main = "Density Plot", xlab = "Trait", ylab = "Density", xlim = c(1, 16), col = "blue")
+
+# Overlay density for Africa_Frequency
+lines(dens_africa, col = "red")
+
+# Add legend
+legend("topleft", legend = c("Global", "Africa"), fill = c("blue", "red"))
+
+axis(1, at = numeric_labels, labels = TRUE)
+
+
+
+
+##for individual traits --------------------------------------------------------
+
+# Create density estimates for each trait and frequency
+dens_data <- lapply(levels(merged_frequency$Trait_New), function(trait) {
+  trait_data <- merged_frequency[merged_frequency$Trait_New == trait, ]
+  dens_global <- density(rep(1, trait_data$Global_Frequency))
+  dens_africa <- density(rep(1, trait_data$Africa_Frequency))
+  
+  data.frame(
+    x = c(dens_global$x, rev(dens_africa$x)),  # Reverse the x values for Africa to fill area correctly
+    y = c(dens_global$y, rev(dens_africa$y)),  # Reverse the y values for Africa to fill area correctly
+    ymin = c(rep(0, length(dens_global$x)), rep(0, length(dens_africa$x))),
+    ymax = c(dens_global$y, rev(dens_africa$y)),
+    group = rep(c("Global", "Africa"), each = length(dens_global$x)),
+    trait = trait
+  )
+})
+
+# Combine density estimates for all traits into a single data frame
+dens_data <- do.call(rbind, dens_data)
+
+# Create ggplot with facet wrap for each trait
+ggplot(dens_data, aes(x = x, ymin = ymin, ymax = ymax, fill = group)) +
+  geom_ribbon(alpha = 0.5) +  # Set transparency for the filled area
+  facet_wrap(~ trait, scales = "free_y", ncol = 4) +
+  labs(title = "Density Plots for Each Trait",
+       x = "Trait",
+       y = "Density",
+       fill = "Region") +
+  theme(legend.position = "top")
