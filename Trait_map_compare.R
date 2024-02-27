@@ -4,7 +4,7 @@ print("Global Frequency Table:")
 print(global_frequency)
 
 # Frequency table for the filtered dataset with only African countries
-africa_frequency <- table(trait_workdata$TraitName)
+africa_frequency <- table(trait_africa$TraitName)
 print("African Countries Frequency Table:")
 print(africa_frequency)
 
@@ -160,62 +160,55 @@ heat.data <- pivot_longer(data = merged_frequency,
 
 
 # Density ------------------------------------------------------------------
-## combined density for each traits --------------------------------------------------------------------------
-# Convert items to factor with meaningful labels
-merged_frequency$Trait_New <- factor(merged_frequency$Trait_New, levels = unique(merged_frequency$Trait_New), labels = unique(merged_frequency$Trait_New))
+## Global and Africa density plots for each traits --------------------------------------------------------------------------
 
-# Create numeric labels for traits
-numeric_labels <- seq_along(unique(merged_frequency$Trait_New))
+# Plot density distribution for Africa
+ggplot(trait_africa, aes(x = StdValue)) +
+  geom_density(alpha = 0.6) +
+  facet_wrap(~TraitName, scales = "free", ncol = 4, labeller = label_wrap_gen(width = 30)) +
+  labs(title = "Density Plot for Traits in Africa",
+       x = "Standardized Value",
+       y = "Density") +
+  theme_minimal()
 
-# Create density estimate for Global_Frequency
-expanded_data_global <- rep(numeric_labels, merged_frequency$Global_Frequency)
-dens_global <- density(expanded_data_global)
-
-# Create density estimate for Africa_Frequency
-expanded_data_africa <- rep(numeric_labels, merged_frequency$Africa_Frequency)
-dens_africa <- density(expanded_data_africa)
-
-# Plot density for Global_Frequency
-plot(dens_global, main = "Density Plot", xlab = "Trait", ylab = "Density", xlim = c(1, 16), col = "blue")
-
-# Overlay density for Africa_Frequency
-lines(dens_africa, col = "red")
-
-# Add legend
-legend("topleft", legend = c("Global", "Africa"), fill = c("blue", "red"))
-
-axis(1, at = numeric_labels, labels = TRUE)
+# Plot density distribution for global data
+ggplot(trait_workdata, aes(x = StdValue)) +
+  geom_density() +
+  facet_wrap(~TraitName, scales = "free", ncol = 4, labeller = label_wrap_gen(width = 30)) +
+  labs(title = "Density Plot for Traits Globally",
+       x = "Standardized Value",
+       y = "Density") +
+  theme_minimal()
 
 
 
 
-##for individual traits --------------------------------------------------------
+# Convert coordinates to match African CRS for global data
+trait_workdata <- trait_workdata %>%
+  sf::st_as_sf(coords = c("Longitude", "Latitude"), crs = 4326) %>%
+  sf::st_transform(st_crs(africa))  # Transform to match African data CRS
 
-# Create density estimates for each trait and frequency
-dens_data <- lapply(levels(merged_frequency$Trait_New), function(trait) {
-  trait_data <- merged_frequency[merged_frequency$Trait_New == trait, ]
-  dens_global <- density(rep(1, trait_data$Global_Frequency))
-  dens_africa <- density(rep(1, trait_data$Africa_Frequency))
-  
-  data.frame(
-    x = c(dens_global$x, rev(dens_africa$x)),  # Reverse the x values for Africa to fill area correctly
-    y = c(dens_global$y, rev(dens_africa$y)),  # Reverse the y values for Africa to fill area correctly
-    ymin = c(rep(0, length(dens_global$x)), rep(0, length(dens_africa$x))),
-    ymax = c(dens_global$y, rev(dens_africa$y)),
-    group = rep(c("Global", "Africa"), each = length(dens_global$x)),
-    trait = trait
-  )
-})
+# Select only necessary columns in trait_africa
+trait_africa <- trait_africa %>%
+  dplyr::select(-Longitude, -Latitude)
 
-# Combine density estimates for all traits into a single data frame
-dens_data <- do.call(rbind, dens_data)
+# Add a column to indicate whether data is from Africa or not
+trait_africa$Region <- "Africa"
+trait_workdata$Region <- "Global"
 
-# Create ggplot with facet wrap for each trait
-ggplot(dens_data, aes(x = x, ymin = ymin, ymax = ymax, fill = group)) +
-  geom_ribbon(alpha = 0.5) +  # Set transparency for the filled area
-  facet_wrap(~ trait, scales = "free_y", ncol = 4) +
-  labs(title = "Density Plots for Each Trait",
-       x = "Trait",
+
+# Combine Africa and global data
+combined_data <- rbind(trait_africa, trait_workdata)
+
+# Plot density distribution for combined data
+ggplot(combined_data, aes(x = StdValue, fill = Region)) +
+  geom_density(alpha = 0.0) +
+  facet_wrap(~TraitName, scales = "free", ncol = 4, labeller = label_wrap_gen(width = 30)) +
+  labs(title = "Density Plot for Traits: Africa vs Global",
+       x = "Standardized Value",
        y = "Density",
        fill = "Region") +
-  theme(legend.position = "top")
+  theme_minimal()+
+  theme(strip.text = element_text(size = 7, angle = 0, hjust = 0.9))
+
+

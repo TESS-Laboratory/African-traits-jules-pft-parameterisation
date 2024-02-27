@@ -20,6 +20,10 @@ library(patchwork)
 trait_data <- read_csv("workdata_traits.csv")
 
 
+# Filter out rows where StdValue is less than 0
+trait_data <- trait_data %>%
+  filter(StdValue > 0)
+
 # Keep only the columns we need ----
 vars <- c("AccSpeciesName", "TraitName", "StdValue", "Latitude",
           "Longitude")
@@ -80,15 +84,15 @@ world_sf <- st_as_sf(world)
 ## Get world map data and filter for African countries ----
 world <- ne_countries(scale = "medium", returnclass = "sf")
 africa <- sf::st_make_valid(world[world$continent == "Africa", ])
-trait_workdata <- trait_data %>% dplyr::select(one_of(vars))
-trait_workdata <- trait_workdata %>%
+trait_africa <- trait_data %>% dplyr::select(one_of(vars))
+trait_africa <- trait_workdata %>%
   sf::st_as_sf(coords = c("Longitude", "Latitude"), crs = 4326, remove = FALSE) %>%
   sf::st_filter(africa)
 
 ## Plot map with country borders and data points ----
 (ggplot() +
    geom_sf(data = africa, fill = NA, color = "black") +
-   geom_sf(data = trait_workdata, aes(color = TraitName)) +
+   geom_sf(data = trait_africa, aes(color = TraitName)) +
    coord_sf() +
    theme_void() +
    labs(x = "Longitude", y = "Latitude", color = "Trait") +
@@ -102,13 +106,13 @@ trait_workdata <- trait_workdata %>%
 trait_plots_africa <- list()
 
 # Define alphabet letters
-letters <- LETTERS[1:length(unique(trait_workdata$TraitName))]
+letters <- LETTERS[1:length(unique(trait_africa$TraitName))]
 
-for (i in seq_along(unique(trait_workdata$TraitName))) {
-  trait <- unique(trait_workdata$TraitName)[i]
+for (i in seq_along(unique(trait_africa$TraitName))) {
+  trait <- unique(trait_africa$TraitName)[i]
   trait_plot <- ggplot() +
     geom_sf(data = africa, fill = NA, color = "black") +
-    geom_sf(data = filter(trait_workdata, TraitName == trait), aes(color = TraitName)) +
+    geom_sf(data = filter(trait_africa, TraitName == trait), aes(color = TraitName)) +
     coord_sf() +
     theme_void() +
     labs(x = "Longitude", y = "Latitude", color = "Trait") +
@@ -129,7 +133,7 @@ trait_plots_africa_combined
 
 
 # Make Africa map of traits ----
-ggplot(trait_workdata) +
+ggplot(trait_africa) +
   aes(x = Longitude, y = Latitude) +
   geom_sf(
     data = africa, aes(geometry = geometry),
