@@ -202,7 +202,7 @@ combined_data <- rbind(trait_africa, trait_workdata)
 
 # Plot density distribution for combined data
 ggplot(combined_data, aes(x = StdValue, fill = Region)) +
-  geom_density(alpha = 0.0) +
+  geom_density(alpha = 0.3) +
   facet_wrap(~TraitName, scales = "free", ncol = 4, labeller = label_wrap_gen(width = 30)) +
   labs(title = "Density Plot for Traits: Africa vs Global",
        x = "Standardized Value",
