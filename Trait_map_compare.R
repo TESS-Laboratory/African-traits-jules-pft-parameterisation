@@ -169,7 +169,8 @@ ggplot(trait_africa, aes(x = StdValue)) +
   labs(title = "Density Plot for Traits in Africa",
        x = "Standardized Value",
        y = "Density") +
-  theme_minimal()
+  theme_minimal() + scale_x_log10()
+
 
 # Plot density distribution for global data
 ggplot(trait_workdata, aes(x = StdValue)) +
@@ -178,7 +179,7 @@ ggplot(trait_workdata, aes(x = StdValue)) +
   labs(title = "Density Plot for Traits Globally",
        x = "Standardized Value",
        y = "Density") +
-  theme_minimal()
+  theme_minimal() + scale_x_log10()
 
 
 
@@ -202,13 +203,13 @@ combined_data <- rbind(trait_africa, trait_workdata)
 
 # Plot density distribution for combined data
 ggplot(combined_data, aes(x = StdValue, fill = Region)) +
-  geom_density(alpha = 0.3) +
+  geom_density(alpha = 0.6) +
   facet_wrap(~TraitName, scales = "free", ncol = 4, labeller = label_wrap_gen(width = 30)) +
   labs(title = "Density Plot for Traits: Africa vs Global",
        x = "Standardized Value",
        y = "Density",
        fill = "Region") +
   theme_minimal()+
-  theme(strip.text = element_text(size = 7, angle = 0, hjust = 0.9))
+  theme(strip.text = element_text(size = 7, angle = 0, hjust = 0.9)) + scale_x_log10()
 
 
