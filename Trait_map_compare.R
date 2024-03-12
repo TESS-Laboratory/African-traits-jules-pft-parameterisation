@@ -163,8 +163,8 @@ heat.data <- pivot_longer(data = merged_frequency,
 ## Global and Africa density plots for each traits --------------------------------------------------------------------------
 
 # Plot density distribution for Africa
-ggplot(trait_africa, aes(x = StdValue)) +
-  geom_density(alpha = 0.6) +
+ggplot(trait_africa, aes(x = StdValue, fill = TRUE)) +
+  geom_density() +
   facet_wrap(~TraitName, scales = "free", ncol = 4, labeller = label_wrap_gen(width = 30)) +
   labs(title = "Density Plot for Traits in Africa",
        x = "Standardized Value",
@@ -173,7 +173,7 @@ ggplot(trait_africa, aes(x = StdValue)) +
 
 
 # Plot density distribution for global data
-ggplot(trait_workdata, aes(x = StdValue)) +
+ggplot(trait_workdata, aes(x = StdValue, fill = TRUE)) +
   geom_density() +
   facet_wrap(~TraitName, scales = "free", ncol = 4, labeller = label_wrap_gen(width = 30)) +
   labs(title = "Density Plot for Traits Globally",
