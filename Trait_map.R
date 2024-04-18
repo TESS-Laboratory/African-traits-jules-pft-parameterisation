@@ -44,6 +44,12 @@ trait_workdata <- trait_workdata %>%
 
 # Make global map of traits ----
 
+# this is for the future <- density of observations in a hex bin rather than the continuous  
+#                           scalar palette as the information content of is lost atm
+#                           To better represent the tropics and Africa with less distortion in the global maps,  
+#                           can you switch to using the a better projection 'Winkel Tripel' is the best (but even 'Robinson' is better than the 'Mercator').
+#                           This is usually one line of extra code in the map script to change form the default.
+
 world <- getMap(resolution = "low")
 
 (with_world <- ggplot() +
