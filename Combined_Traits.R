@@ -73,6 +73,12 @@ new_trait_workdata <- new_trait_workdata %>%
 
 
 # Make global map of traits ----
+# this is for the future <- density of observations in a hex bin rather than the continuous  
+#                           scalar palette as the information content of is lost atm
+#                           To better represent the tropics and Africa with less distortion in the global maps,  
+#                           can you switch to using the a better projection 'Winkel Tripel' is the best (but even 'Robinson' is better than the 'Mercator').
+#                           This is usually one line of extra code in the map script to change form the default.
+
 
 world <- getMap(resolution = "low")
 
@@ -132,7 +138,7 @@ trait_africa <- new_trait_workdata %>%
 
 
 
-# Make separate plots for each trait in the African region ----
+## Make separate plots for each trait in the African region ----
 trait_plots_africa <- list()
 
 # Define alphabet letters
@@ -162,7 +168,7 @@ trait_plots_africa_combined
 
 
 
-# Make Africa map of traits ----
+## Make Africa map of traits ----
 ggplot(trait_africa) +
   aes(x = Longitude, y = Latitude) +
   geom_sf(
@@ -179,7 +185,9 @@ ggplot(trait_africa) +
 
 
 
-### Comparison between global and African observation-------------------
+# 3rd LEVEL ----
+
+## Comparison between global and African observation-------------------
 
 global_frequency <- table(new_trait_workdata$TraitName)
 print("Global Frequency Table:")
@@ -210,7 +218,7 @@ merged_frequency$Trait_New <- factor(merged_frequency$Trait, levels = unique(mer
 
 
 
-# Plot the bar chart ----
+## Plot the bar chart ----
 ggplot(merged_frequency, aes(x = Trait, y = Global_Frequency, fill = "Global")) +
   geom_bar(stat = "identity", position = "dodge") +
   geom_bar(aes(y = Africa_Frequency, fill = "Africa"), stat = "identity", position = "dodge") +
@@ -263,7 +271,7 @@ ggplot(merged_frequency, aes(x = Trait, y = Africa_Percentage, fill = "Africa"))
 
 
 
-# visualizing this as a heat map plot for each one of the eight traits ----
+## visualizing this as a heat map plot for each one of the eight traits ----
 # Create a heatmap for percentage differences
 heat.data2 <- pivot_longer(data = merged_frequency,
                            cols = -c(1:4),
@@ -302,6 +310,8 @@ heat.data <- pivot_longer(data = merged_frequency,
 
 # Density ------------------------------------------------------------------
 ## Global and Africa density plots for each traits --------------------------------------------------------------------------
+# including N (The number of observation) for each data series plotted as annotations on the graph would greatly help with their interpretation.
+
 
 # Plot density distribution for Africa
 ggplot(trait_africa, aes(x = StdValue, fill = TRUE)) +
