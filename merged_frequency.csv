@@ -12,6 +12,7 @@
 "Leaf area per leaf dry mass (specific leaf area, SLA or 1/LMA): undefined if petiole is in- or excluded",161057,6378,"SLA(petiole undefined)"
 "Leaf lifespan (longevity)",2706,2,"LLS"
 "Leaf nitrogen (N) content per leaf",1674,157,"Leaf(N)"
+"Leaf nitrogen (N) content per leaf dry mass",88890,6319,"Leaf (Nmass)"
 "Photosynthesis carboxylation capacity (Vcmax) per leaf area (Farquhar model)",8074,1612,"Vcmax/LA"
 "Photosynthesis carboxylation capacity (Vcmax) per leaf dry mass (Farquhar model)",5596,1213,"Vcmax/LMA"
 "Root rooting depth",4938,536,"Root rooting depth"

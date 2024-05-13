@@ -17,7 +17,12 @@ library(tidyverse)
 library(patchwork)
 
 
-trait_data <- read_csv("workdata_traits.csv")
+trait_data1 <- read_csv("workdata_traits.csv")
+
+trait_data2 <- read_csv("workdata_traits2.csv")
+
+trait_data <- bind_rows(trait_data1, trait_data2)
+
 
 
 # Filter out rows where StdValue is less than 0
@@ -25,8 +30,8 @@ trait_data <- trait_data %>%
   filter(StdValue > 0)
 
 # Keep only the columns we need ----
-vars <- c("AccSpeciesName", "TraitName", "StdValue", "Latitude",
-          "Longitude")
+vars <- c("AccSpeciesName", "TraitName", "StdValue", 
+          "UnitName", "Latitude", "Longitude")
 
 trait_workdata<- trait_data %>% dplyr::select(one_of(vars))
 
@@ -145,9 +150,9 @@ ggplot(trait_africa) +
     data = africa, aes(geometry = geometry),
     fill = NA, color = "black", inherit.aes = FALSE, lwd = 0.2
   ) + # Add country borders
-  geom_hex(binwidth = 10, alpha=0.6) +
+  geom_hex(binwidth = 7, alpha=0.6) +
   scale_fill_viridis_c() +
-  facet_wrap(~TraitName, ncol = 5, labeller = label_wrap_gen(width = 30)) +  # Adjust width as needed
+  facet_wrap(~TraitName, ncol = 6, labeller = label_wrap_gen(width = 30)) +  # Adjust width as needed
   theme_classic() +
   theme(strip.text = element_text(size = 7, angle = 0, hjust = 0.9))  # Adjust size and angle as needed
 
