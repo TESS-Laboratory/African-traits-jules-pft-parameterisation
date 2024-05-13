@@ -28,7 +28,7 @@ new_trait_names <- c("LA(undefined)", "LA(leaf, petiole ex)",
                      "LA(leaflet, petiole undefined)", "SLA(petiole, rhachis, midrib ex)",
                      "SLA(petiole ex)", "SLA(petiole in)",
                      "SLA(petiole undefined)", "LLS",
-                     "Leaf(N)", "Vcmax/LA", 
+                     "Leaf(N)", "Leaf (Nmass)", "Vcmax/LA", 
                      "Vcmax/LMA", "Root rooting depth")
 
 # Mutate the merged_frequency data frame with the new trait names

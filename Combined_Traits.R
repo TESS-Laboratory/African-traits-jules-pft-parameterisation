@@ -21,7 +21,11 @@ library(tidyverse)
 library(patchwork)
 
 
-trait_data <- read_csv("workdata_traits.csv")
+trait_data1 <- read_csv("workdata_traits.csv")
+
+trait_data2 <- read_csv("workdata_traits2.csv")
+
+trait_data <- bind_rows(trait_data1, trait_data2)
 
 
 # Filter out rows where StdValue is less than 0
@@ -29,8 +33,8 @@ trait_data <- trait_data %>%
   filter(StdValue > 0)
 
 # Keep only the columns we need ----
-vars <- c("AccSpeciesName", "TraitName", "StdValue", "Latitude",
-          "Longitude")
+vars <- c("AccSpeciesName", "TraitName", "StdValue", 
+          "UnitName", "Latitude", "Longitude")
 
 trait_workdata<- trait_data %>% dplyr::select(one_of(vars))
 
@@ -214,7 +218,7 @@ merged_frequency <- merge(global_frequency_df, africa_frequency_df, by = "Trait"
 
 
 # Assuming merged_frequency$Trait is a factor, if not, convert it to a factor first
-merged_frequency$Trait_New <- factor(merged_frequency$Trait, levels = unique(merged_frequency$Trait_New)) 
+# merged_frequency$Trait_New <- factor(merged_frequency$Trait, levels = unique(merged_frequency$Trait_New)) 
 
 
 
@@ -274,7 +278,7 @@ ggplot(merged_frequency, aes(x = Trait, y = Africa_Percentage, fill = "Africa"))
 ## visualizing this as a heat map plot for each one of the eight traits ----
 # Create a heatmap for percentage differences
 heat.data2 <- pivot_longer(data = merged_frequency,
-                           cols = -c(1:4),
+                           cols = -c(1:3),
                            names_to = "Area",
                            values_to = "Africa_per")
 
@@ -293,7 +297,7 @@ heat.data2 <- pivot_longer(data = merged_frequency,
 # Create a heatmap for absolute frequencies
 
 heat.data <- pivot_longer(data = merged_frequency,
-                          cols = -c(1,4,5),
+                          cols = -c(1,4),
                           names_to = "Area",
                           values_to = "Abundance")
 
