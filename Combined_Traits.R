@@ -78,7 +78,7 @@ species_count_global <- new_trait_workdata %>%
 species_count_africa <- trait_africa %>%
   group_by(AccSpeciesName) %>%
   summarise(count = n()) %>%
-  arrange(desc(count))
+  arrange(desc(count)) # this will only work after you have sepereated trait_africa. 
 
 
 
@@ -209,7 +209,7 @@ ggplot(trait_africa) +
 
 
 
-## for future me, I just want to highlight how I saved dta for the PFT classification
+## for future me, I just want to highlight how I saved data for the PFT classification
 #current_directory <- getwd()
 # Save the dataset to the current working directory
 #write.csv(trait_africa, file.path(current_directory, "trait_africa.csv"), row.names = FALSE)
