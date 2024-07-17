@@ -32,6 +32,14 @@ trait_data <- bind_rows(trait_data1, trait_data2)
 trait_data <- trait_data %>%
   filter(StdValue > 0)
 
+
+
+# Remove unknown species in the AccSpeciesName column
+trait_data <- trait_data %>%
+  filter(AccSpeciesName != "unknown")
+
+
+
 # Keep only the columns we need ----
 vars <- c("AccSpeciesName", "TraitName", "StdValue", 
           "UnitName", "Latitude", "Longitude")
@@ -58,6 +66,19 @@ trait_name_mapping <- c(
 # Replace old trait names with new trait names
 new_trait_workdata <- trait_workdata %>% 
   mutate(TraitName = ifelse(TraitName %in% names(trait_name_mapping), trait_name_mapping[TraitName], TraitName))
+
+
+# compare the observed species for Global and Africa observation 
+species_count_global <- new_trait_workdata %>%
+  group_by(AccSpeciesName) %>%
+  summarise(count = n()) %>%
+  arrange(desc(count))
+
+
+species_count_africa <- trait_africa %>%
+  group_by(AccSpeciesName) %>%
+  summarise(count = n()) %>%
+  arrange(desc(count))
 
 
 
@@ -184,6 +205,16 @@ ggplot(trait_africa) +
   facet_wrap(~TraitName, ncol = 4, labeller = label_wrap_gen(width = 20)) +  # Adjust width as needed
   theme_classic() +
   theme(strip.text = element_text(size = 15, angle = 0, hjust = 0.9))  # Adjust size and angle as needed
+
+
+
+
+## for future me, I just want to highlight how I saved dta for the PFT classification
+#current_directory <- getwd()
+# Save the dataset to the current working directory
+#write.csv(trait_africa, file.path(current_directory, "trait_africa.csv"), row.names = FALSE)
+
+
 
 
 
