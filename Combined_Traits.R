@@ -21,11 +21,38 @@ library(tidyverse)
 library(patchwork)
 
 
+
+# Read the new dataset by Marijn data from the CSV file
+workdata_traits_Marijn <- read.csv("workdata_traits_Marijn.csv")
+
+# Specify the trait names you're interested in. there are other traits in this dataset i had to sort out
+traits_of_interest <- c(
+  "Leaf area per leaf dry mass (specific leaf area, SLA or 1/LMA): undefined if petiole is in- or excluded",
+  "Leaf nitrogen (N) content per leaf area",
+  "Leaf nitrogen (N) content per leaf dry mass"
+)
+
+# Filter the data for the specified trait names and sort by TraitName
+filtered_data <- workdata_traits_Marijn %>%
+  filter(TraitName %in% traits_of_interest) %>%
+  arrange(TraitName)
+
+# View the filtered data
+print(filtered_data)
+
+# Alternatively, save the filtered data to a new CSV file
+write.csv(filtered_data, "filtered_traits.csv", row.names = FALSE)
+
+
+# Load all the data
+
 trait_data1 <- read_csv("workdata_traits.csv")
 
 trait_data2 <- read_csv("workdata_traits2.csv")
 
-trait_data <- bind_rows(trait_data1, trait_data2)
+trait_data3 <- read_csv("filtered_traits.csv")
+
+trait_data <- bind_rows(trait_data1, trait_data2, trait_data3)
 
 
 # Filter out rows where StdValue is less than 0
@@ -160,6 +187,11 @@ trait_africa <- new_trait_workdata %>%
    guides(color = guide_legend(title = "Trait")))
 
 
+
+
+#export both dataset
+write.csv(new_trait_workdata, "trait_data.csv", row.names = FALSE)
+write.csv(trait_africa, "trait_africa.csv", row.names = FALSE)
 
 
 
