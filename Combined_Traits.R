@@ -69,7 +69,7 @@ trait_data <- trait_data %>%
 
 # Keep only the columns we need ----
 vars <- c("AccSpeciesName", "TraitName", "StdValue", 
-          "UnitName", "Latitude", "Longitude")
+          "UnitName", "Latitude", "Longitude", "Exposition", "Plant_dev_status", "Reference")
 
 trait_workdata<- trait_data %>% dplyr::select(one_of(vars))
 
@@ -95,6 +95,33 @@ new_trait_workdata <- trait_workdata %>%
   mutate(TraitName = ifelse(TraitName %in% names(trait_name_mapping), trait_name_mapping[TraitName], TraitName))
 
 
+
+
+# converting units and changing units names to match JULES default unit for LMA (That is SLA=1/LMA) AND Nmass
+# Step 1: Filter for the trait "leaf area per leaf dry mass"
+leaf_area_mask <- new_trait_workdata$TraitName == "leaf area per leaf dry mass"
+
+# Step 2: Convert SLA (mm2/mg) to LMA (kg/m2) by taking the reciprocal
+new_trait_workdata$StdValue[leaf_area_mask] <- 1 / new_trait_workdata$StdValue[leaf_area_mask]
+
+# Step 3: Update the UnitName for this trait to "kg/m2"
+new_trait_workdata$UnitName[leaf_area_mask] <- "kg m-2"
+
+
+# Step 1: Filter for the trait "Leaf nitrogen (N) content per leaf dry mass" and convert its values
+# Replace the "TraitName" and "StdValue" columns with the actual column names in your dataset
+leaf_nitrogen_mask <- new_trait_workdata$TraitName == "Leaf nitrogen (N) content per leaf dry mass"
+
+# Step 2: Convert mg/g to kg/kg by dividing by 1000 for the corresponding StdValue column
+new_trait_workdata$StdValue[leaf_nitrogen_mask] <- new_trait_workdata$StdValue[leaf_nitrogen_mask] / 1000
+
+# Step 3: Update the UnitName for this specific trait to "kg/kg"
+new_trait_workdata$UnitName[leaf_nitrogen_mask] <- "kg/kg"
+
+
+
+
+
 # compare the observed species for Global and Africa observation 
 species_count_global <- new_trait_workdata %>%
   group_by(AccSpeciesName) %>%
@@ -102,10 +129,27 @@ species_count_global <- new_trait_workdata %>%
   arrange(desc(count))
 
 
+
+# compare the observed species for exposition status 
+species_exposition <- new_trait_workdata %>%
+  group_by(Exposition) %>%
+  summarise(count = n()) %>%
+  arrange(desc(count))
+
+
+# compare the observed species for plant dev status 
+species_dev_status <- new_trait_workdata %>%
+  group_by(Plant_dev_status) %>%
+  summarise(count = n()) %>%
+  arrange(desc(count))
+
+
+
+
 species_count_africa <- trait_africa %>%
   group_by(AccSpeciesName) %>%
   summarise(count = n()) %>%
-  arrange(desc(count)) # this will only work after you have sepereated trait_africa. 
+  arrange(desc(count)) # this will only work after you have seperated trait_africa. 
 
 
 
@@ -192,6 +236,21 @@ trait_africa <- new_trait_workdata %>%
 #export both dataset
 write.csv(new_trait_workdata, "trait_data.csv", row.names = FALSE)
 write.csv(trait_africa, "trait_africa.csv", row.names = FALSE)
+
+
+
+# compare the observed species for exposition status 
+species_exposition_africa <- trait_africa %>%
+  group_by(Exposition) %>%
+  summarise(count = n()) %>%
+  arrange(desc(count))
+
+
+# compare the observed species for plant dev status 
+species_dev_status_africa <- trait_africa %>%
+  group_by(Plant_dev_status) %>%
+  summarise(count = n()) %>%
+  arrange(desc(count))
 
 
 
