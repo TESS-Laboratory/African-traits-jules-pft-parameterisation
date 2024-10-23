@@ -137,7 +137,7 @@ num_traits <- rtry_select_row(workdata, complete.cases(TraitID) & complete.cases
 num_traits <- rtry_select_col(num_traits, ObservationID, AccSpeciesID, AccSpeciesName, TraitID, TraitName, StdValue, UnitName)
 
 # Extract the unique value of latitude (DataID 59) and longitude (DataID 60) together with the corresponding ObservationID
-workdata_georef <- rtry_select_anc(workdata, 59, 60)
+workdata_georef <- rtry_select_anc(workdata, 59, 60, 113, 327, 413)
 
 # To merge the extracted ancillary data with the numerical traits
 # Merge the relevant data frames based on the ObservationID using rtry_join_left (left join)
@@ -297,7 +297,7 @@ num_traits2 <- rtry_select_row(workdata2, complete.cases(TraitID) & complete.cas
 num_traits2 <- rtry_select_col(num_traits2, ObservationID, AccSpeciesID, AccSpeciesName, TraitID, TraitName, StdValue, UnitName)
 
 # Extract the unique value of latitude (DataID 59) and longitude (DataID 60) together with the corresponding ObservationID
-workdata_georef2 <- rtry_select_anc(workdata2, 59, 60)
+workdata_georef2 <- rtry_select_anc(workdata2, 59, 60, 113, 327, 413)
 
 # To merge the extracted ancillary data with the numerical traits
 # Merge the relevant data frames based on the ObservationID using rtry_join_left (left join)
@@ -445,15 +445,15 @@ TRYdata6_explore_anc <- rtry_explore(TRYdata6, DataID, DataName, TraitID, TraitN
 workdata3 <- rtry_remove_col(TRYdata6, V29)
 
 
-workdata3 <- rtry_select_col(TRYdata6, ObsDataID, ObservationID, AccSpeciesID, AccSpeciesName, ValueKindName, TraitID, TraitName, DataID, DataName, OriglName, OrigValueStr, OrigUnitStr, StdValue, UnitName, OrigObsDataID, ErrorRisk, Comment)
-View(workdata)
+workdata3 <- rtry_select_col(TRYdata6, ObsDataID, ObservationID, AccSpeciesID, AccSpeciesName, ValueKindName, TraitID, TraitName, DataID, DataName, OriglName, OrigValueStr, OrigUnitStr, StdValue, UnitName, OrigObsDataID, ErrorRisk, Reference, Comment)
+View(workdata3)
 
 workdata3_explore_anc <- rtry_explore(workdata3, DataID, DataName, TraitID, TraitName, sortBy = TraitID)
 View(workdata3_explore_anc)
 
 
-workdata <- rtry_select_row(workdata, TraitID > 0 | DataID %in% c(59, 60, 61, 6601, 327, 413, 1961, 113))
-View(workdata)
+workdata3 <- rtry_select_row(workdata3, TraitID > 0 | DataID %in% c(59, 60, 61, 6601, 327, 413, 1961, 113, 1863))
+View(workdata3)
 
 workdata3_explore_anc <- rtry_explore(workdata3, DataID, DataName, TraitID, TraitName, sortBy = TraitID)
 View(workdata3_explore_anc)
@@ -543,10 +543,10 @@ workdata3 <- rtry_remove_dup(workdata3)
 #       i.e. have no missing values
 num_traits3 <- rtry_select_row(workdata3, complete.cases(TraitID) & complete.cases(StdValue))
 
-num_traits3 <- rtry_select_col(num_traits3, ObservationID, AccSpeciesID, AccSpeciesName, TraitID, TraitName, StdValue, UnitName)
+num_traits3 <- rtry_select_col(num_traits3, ObservationID, AccSpeciesID, AccSpeciesName, TraitID, TraitName, StdValue, UnitName, Reference)
 
 # Extract the unique value of latitude (DataID 59) and longitude (DataID 60) together with the corresponding ObservationID
-workdata_georef3 <- rtry_select_anc(workdata3, 59, 60)
+workdata_georef3 <- rtry_select_anc(workdata3, 59, 60, 1863)
 
 # To merge the extracted ancillary data with the numerical traits
 # Merge the relevant data frames based on the ObservationID using rtry_join_left (left join)
