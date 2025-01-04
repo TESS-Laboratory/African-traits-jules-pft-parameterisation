@@ -19,7 +19,8 @@ library(RColorBrewer) # not using this (atm)
 library(tidyr)
 library(tidyverse)
 library(patchwork)
-
+library(viridis)
+library(rgeos)
 
 
 # Read the new dataset by Marijn data from the CSV file
@@ -146,14 +147,6 @@ species_dev_status <- new_trait_workdata %>%
 
 
 
-species_count_africa <- trait_africa %>%
-  group_by(AccSpeciesName) %>%
-  summarise(count = n()) %>%
-  arrange(desc(count)) # this will only work after you have seperated trait_africa. 
-
-
-
-
 
 #------------------------
 
@@ -176,35 +169,82 @@ new_trait_workdata <- new_trait_workdata %>%
 #                           This is usually one line of extra code in the map script to change form the default.
 
 
-world <- getMap(resolution = "low")
+# World map data in a Robinson projection
+world <- ne_countries(scale = "medium", returnclass = "sf")
+world_robinson <- st_transform(world, crs = "+proj=robin")
 
-(with_world <- ggplot() +
-    geom_polygon(data = world, 
-                 aes(x = long, y = lat, group = group),
-                 fill = NA, colour = "black") + 
-    geom_point(data = new_trait_workdata,  
-               aes(x = Longitude, y = Latitude, 
-                   colour = TraitName)) +
-    coord_quickmap() +  # Prevents stretching when resizing
-    theme_classic() +  # Remove ugly grey background
-    xlab("Longitude") +
-    ylab("Latitude") + 
-    guides(colour=guide_legend(title="Traits")))
+# Aggregate data by TraitName and geographic coordinates
+data_aggregated <- new_trait_workdata %>%
+  group_by(Latitude, Longitude, TraitName) %>%
+  summarise(TraitCount = n()) %>%
+  ungroup()
+
+# Convert dataset to an sf object
+data_sf <- st_as_sf(data_aggregated, coords = c("Longitude", "Latitude"), crs = 4326)
+
+# Transform to Robinson projection
+data_robinson <- st_transform(data_sf, crs = "+proj=robin")
+
+# Plot the heat map with traits
+ggplot() +
+  geom_sf(data = world_robinson, fill = "gray95", color = "gray80") +
+  geom_sf(data = data_robinson, aes(color = TraitName, size = TraitCount), alpha = 0.7) +
+  scale_color_viridis_d(
+    option = "plasma", 
+    name = "Trait Name",
+    guide = guide_legend(
+      override.aes = list(shape = 15, size = 5) # Use squares and adjust size
+    )
+  ) +
+  scale_size_continuous(
+    range = c(1, 15),  # Adjust point size range
+    breaks = c(100, 1000, 3000, 5000, 7000, 10000, 15000, 20000),  # Specify custom breaks
+    labels = c("100", "1k", "3k", "5k", "7k", "10k", "15k", "20k"),  # Format labels for clarity
+    name = "Observation Count"
+  ) +
+  theme_minimal() +
+  theme(
+    panel.background = element_rect(fill = "lightblue", color = NA),
+    panel.grid = element_line(color = "gray80"),
+    legend.position = "right",
+    legend.text = element_text(size = 12),        # Increase size of legend text
+    legend.title = element_text(size = 14, face = "bold")  # Increase size of legend title
+  ) +
+  ggtitle("Global Distribution of Individual Plant Traits") +
+  theme(
+    text = element_text(size = 12, face = "bold"),
+    plot.title = element_text(hjust = 0.5)
+  )
 
 
 
 
 
-# Convert world data to sf object
-world_sf <- st_as_sf(world)
+# Plot the map
+ggplot() +
+  geom_sf(data = world_robinson, fill = "gray95", color = "gray80") +
+  geom_sf(data = data_robinson, aes(color = TraitName), size = 2, alpha = 0.8) +
+  scale_color_viridis_d(
+    option = "plasma",
+    name = "Trait Name",
+    guide = guide_legend(
+      override.aes = list(shape = 15, size = 5) # Square legend keys
+    )
+  ) +
+  theme_minimal() +
+  theme(
+    panel.background = element_rect(fill = "lightblue", color = NA),
+    panel.grid = element_line(color = "gray80"),
+    legend.position = "right",
+    legend.text = element_text(size = 12),
+    legend.title = element_text(size = 14, face = "bold")
+  ) +
+  ggtitle("Global Distribution of Plant Trait Observations") +
+  theme(
+    text = element_text(size = 12, face = "bold"),
+    plot.title = element_text(hjust = 0.5)
+  )
 
-(heat_map <- ggplot() +
-    geom_tile(data = new_trait_workdata, aes(x = Longitude, y = Latitude, fill = TraitName), width = 1, height = 1) +
-    geom_sf(data = world_sf, fill = NA, color = "black") +  # Add country borders
-    coord_sf() +  # Use coord_sf instead of coord_quickmap
-    theme_classic() +
-    labs(x = "Longitude", y = "Latitude", fill = "Traits") +
-    scale_fill_viridis_d())  
 
 
 
@@ -213,29 +253,51 @@ world_sf <- st_as_sf(world)
 
 ## Make regional map of traits for Africa ----
 
-## Get world map data and filter for African countries ----
-world <- ne_countries(scale = "medium", returnclass = "sf")
+# Get world map and filter for Africa
+
 africa <- sf::st_make_valid(world[world$continent == "Africa", ])
-trait_africa <- trait_data %>% dplyr::select(one_of(vars))
+
+
+# Filter trait data for Africa
 trait_africa <- new_trait_workdata %>%
   sf::st_as_sf(coords = c("Longitude", "Latitude"), crs = 4326, remove = FALSE) %>%
   sf::st_filter(africa)
 
-## Plot map with country borders and data points ----
-(ggplot() +
-   geom_sf(data = africa, fill = NA, color = "black") +
-   geom_sf(data = trait_africa, aes(color = TraitName)) +
-   coord_sf() +
-   theme_void() +
-   labs(x = "Longitude", y = "Latitude", color = "Trait") +
-   guides(color = guide_legend(title = "Trait")))
+# Plot map
+ggplot() +
+  geom_sf(data = africa, fill = NA, color = "black", size = 0.5) +  # Add country borders
+  geom_sf(data = trait_africa, aes(color = TraitName), size = 2, alpha = 0.8) +  # Plot points
+  coord_sf() +
+  scale_color_viridis_d(option = "plasma", name = "Trait") +  # Use a visually appealing color scale
+  theme_void() +
+  theme(
+    legend.text = element_text(size = 12),
+    legend.title = element_text(size = 14, face = "bold")
+  ) +
+  labs(x = "Longitude", y = "Latitude", color = "Trait") +
+  guides(color = guide_legend(
+    title = "Trait",
+    override.aes = list(size = 4, alpha = 1)  # Enhance legend appearance
+  )) +
+  ggtitle("Plant Trait Observations in Africa") +
+  theme(plot.title = element_text(hjust = 0.5, size = 16, face = "bold"))
+
 
 
 
 
 #export both dataset
-write.csv(new_trait_workdata, "trait_data.csv", row.names = FALSE)
-write.csv(trait_africa, "trait_africa.csv", row.names = FALSE)
+#write.csv(new_trait_workdata, "trait_data.csv", row.names = FALSE)
+#write.csv(trait_africa, "trait_africa.csv", row.names = FALSE)
+
+
+
+
+# compare the observed species for Africa observation 
+species_count_africa <- trait_africa %>%
+  group_by(AccSpeciesName) %>%
+  summarise(count = n()) %>%
+  arrange(desc(count)) 
 
 
 
