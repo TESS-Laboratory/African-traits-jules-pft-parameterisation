@@ -341,7 +341,7 @@ rtry_export(num_traits_georef2, output_file)
 
 
 # Importing and exploring dataset ----
-## For TRYdata1 ----
+## For TRYdata3 ----
 TRYdata3 <- rtry_import("~/OneDrive - University of Exeter/Desktop/O3-/TRY DataFile/35747.txt")
 View(TRYdata3)
 head(TRYdata3)
