@@ -186,12 +186,12 @@ data_sf <- st_as_sf(data_aggregated, coords = c("Longitude", "Latitude"), crs = 
 data_robinson <- st_transform(data_sf, crs = "+proj=robin")
 
 # Plot the heat map with traits
-ggplot() +
+global_map <- ggplot() +
   geom_sf(data = world_robinson, fill = "gray95", color = "gray80") +
   geom_sf(data = data_robinson, aes(color = TraitName, size = TraitCount), alpha = 0.7) +
   scale_color_viridis_d(
     option = "plasma", 
-    name = "Trait Name",
+    name = "Trait",
     guide = guide_legend(
       override.aes = list(shape = 15, size = 5) # Use squares and adjust size
     )
@@ -204,18 +204,20 @@ ggplot() +
   ) +
   theme_minimal() +
   theme(
-    panel.background = element_rect(fill = "lightblue", color = NA),
+    panel.background = element_rect(color = NA),
     panel.grid = element_line(color = "gray80"),
     legend.position = "right",
-    legend.text = element_text(size = 12),        # Increase size of legend text
-    legend.title = element_text(size = 14, face = "bold")  # Increase size of legend title
+    legend.text = element_text(size = 22),        # Increase size of legend text
+    legend.title = element_text(size = 19)  # Increase size of legend title
   ) +
-  ggtitle("Global Distribution of Individual Plant Traits") +
+ # ggtitle("Global Distribution of Individual Plant Traits") +
   theme(
     text = element_text(size = 12, face = "bold"),
     plot.title = element_text(hjust = 0.5)
   )
 
+
+ggsave("Pgloba_map.png", plot = global_map, width = 22, height = 12, dpi = 300, bg = "white")
 
 
 
