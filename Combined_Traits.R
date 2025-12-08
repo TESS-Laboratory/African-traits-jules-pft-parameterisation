@@ -687,8 +687,9 @@ ggsave("pft_density.png", plot = pft_density, width = 20, height = 12, dpi = 300
 # 3. Density Plot of Traits by PFT----
 # allowing for a comparison of the distribution of trait values between different PFTs.
 
-ggplot(Trait_species_with_PFT, aes(x = StdValue, fill = PFT)) +
-  geom_density(alpha = 0.6) +
+histogram_density2 <- ggplot(Trait_species_with_PFT, aes(x = StdValue, fill = PFT)) +
+  geom_density(aes(y = after_stat(count)),
+               bins = 30, position = "identity", alpha = 0.6) +
   facet_wrap(~ TraitName, scales = "free") +
   labs(x = "Standard Value") +
   theme_minimal() + scale_x_log10() +
@@ -699,6 +700,10 @@ ggplot(Trait_species_with_PFT, aes(x = StdValue, fill = PFT)) +
     legend.title = element_text(size = 12, face = "bold"),
     legend.text = element_text(size = 12, face = "bold")
   )
+
+
+ggsave("histogram_density2.png", plot = histogram_density2, width = 20, height = 12, dpi = 300, bg = "white")
+
 
 
 # better option: Histogram with y-axis = counts (how many observations)
@@ -756,7 +761,7 @@ box_plot <- ggplot(Trait_species_with_PFT, aes(x = PFT, y = StdValue, fill = PFT
     legend.text = element_text(size = 15, face = "bold")
   )
 
-ggsave("box_plot.png", plot = histogram_density, width = 20, height = 12, dpi = 300, bg = "white")
+ggsave("box_plot.png", plot = box_plot, width = 20, height = 12, dpi = 300, bg = "white")
 
 
 
