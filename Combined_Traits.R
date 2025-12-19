@@ -33,6 +33,7 @@ library(tidyverse)
 library(patchwork)
 library(viridis)
 library(rgeos)
+library(scales)
 
 
 # read data ----
@@ -136,6 +137,16 @@ new_trait_workdata <- new_trait_workdata %>%
   arrange(TraitName)
 
 
+new_trait_workdata <- new_trait_workdata %>%
+  mutate(TraitName = if_else(
+    TraitName == "leaf area per leaf dry mass",
+    "Leaf Mass per Area",
+    TraitName
+  ))
+
+
+
+
 # compare the observed species for Global and Africa observation 
 species_count_global <- new_trait_workdata %>%
   group_by(AccSpeciesName) %>%
@@ -230,7 +241,7 @@ global_map <- ggplot() +
   )
 
 
-ggsave("trait_global_map2.png", plot = global_map, width = 18, height = 10, dpi = 300, bg = "white")
+ggsave("trait_global_map22.png", plot = global_map, width = 18, height = 10, dpi = 300, bg = "white")
 
 
 
@@ -574,7 +585,7 @@ density_combined <- ggplot(combined_data, aes(x = StdValue, fill = Region)) +
   theme(strip.text = element_text(size = 15, angle = 0, hjust = 0.9)) + scale_x_log10()
 
 
-ggsave("density_combined.png", plot = density_combined, width = 20, height = 12, dpi = 300, bg = "white")
+ggsave("new_density_combined.png", plot = density_combined, width = 20, height = 12, dpi = 300, bg = "white")
 
 
 
@@ -587,7 +598,9 @@ ggsave("density_combined.png", plot = density_combined, width = 20, height = 12,
 
 PFT_data <- read_csv("Mapped_PFT_Harmonized.csv")
 
-Trait_species_data <- read_csv("trait_africa2.csv")
+Trait_species_data <- read_csv("new_trait_africa.csv")
+
+
 
 
 # Perform a left join to add PFT information to Trait_species
@@ -910,11 +923,14 @@ ggplot(Trait_species_with_PFT, aes(x = StdValue)) +
 summary_stats <- Trait_species_with_PFT %>%
   group_by(PFT, TraitName) %>%
   summarise(
-    mean = mean(StdValue, na.rm = TRUE),
+    mean   = mean(StdValue, na.rm = TRUE),
     median = median(StdValue, na.rm = TRUE),
-    IQR = IQR(StdValue, na.rm = TRUE),
-    min = min(StdValue, na.rm = TRUE),
-    max = max(StdValue, na.rm = TRUE)
+    q25    = quantile(StdValue, 0.25, na.rm = TRUE, type = 7),
+    q75    = quantile(StdValue, 0.75, na.rm = TRUE, type = 7),
+    IQR    = q75 - q25,
+    min    = min(StdValue, na.rm = TRUE),
+    max    = max(StdValue, na.rm = TRUE),
+    .groups = "drop"
   )
 
 # View the results
@@ -927,3 +943,150 @@ write.csv(summary_stats, "summary_stats_new.csv", row.names = FALSE)
 
 
 
+# 5th LEVEL ----
+
+# plotting tradeoff between LMA and Nmass using all stats measurement ----
+# --- 1) Reshape summary_stats to wide: 1 row per PFT ---
+x_breaks <- scales::breaks_pretty(n = 6)  # increase n for more ticks
+y_breaks <- scales::breaks_pretty(n = 7)
+
+traits_wide <- summary_stats %>%
+  dplyr::mutate(
+    trait_key = dplyr::case_when(
+      stringr::str_detect(TraitName, stringr::regex("^Leaf Mass per Area$", ignore_case = TRUE)) ~ "LMA",
+      stringr::str_detect(TraitName, stringr::regex("nitrogen.*leaf dry mass", ignore_case = TRUE)) ~ "Nmass",
+      TRUE ~ NA_character_
+    )
+  ) %>%
+  dplyr::filter(!is.na(trait_key)) %>%
+  dplyr::select(PFT, trait_key, mean, median, IQR, q25, q75, min, max) %>%
+  tidyr::pivot_wider(
+    names_from  = trait_key,
+    values_from = c(mean, median, IQR, q25, q75, min, max),
+    names_glue  = "{trait_key}_{.value}"
+  ) %>%
+  dplyr::arrange(LMA_mean) %>%
+  dplyr::mutate(PFT = factor(PFT, levels = unique(PFT)))
+
+
+
+# --- Shared shape mapping (handles >6 PFTs) ---
+shape_pool <- c(16,17,15,3,7,8,0,1,2,4,5,6,9,10,11,12,13,14)
+shape_vals <- setNames(shape_pool[seq_along(levels(traits_wide$PFT))], levels(traits_wide$PFT))
+
+
+# --- 2) Stat-as-point plots (mean/median/IQR/min/max) ---
+plot_stat_point <- function(df, stat = c("mean","median","IQR","min","max"), add_title = TRUE) {
+  stat <- match.arg(stat)
+  
+  ggplot(df, aes(x = .data[[paste0("LMA_", stat)]],
+                 y = .data[[paste0("Nmass_", stat)]],
+                 colour = PFT, shape = PFT)) +
+    geom_point(size = 3) +
+    scale_shape_manual(values = shape_vals, drop = FALSE) +
+    scale_x_continuous(breaks = x_breaks) +
+    scale_y_continuous(breaks = y_breaks) +
+    theme_bw() +
+    theme(panel.grid = element_blank(),
+          legend.position = "right") +
+    labs(
+      x = expression(LMA~(kg~m^{-2})),
+      y = expression(N[mass]~(g~g^{-1})),
+      title = if (add_title) paste("Nmass vs LMA using:", stat) else NULL
+    )
+}
+
+
+# --- 3) Paper-style tradeoff plot with error bars ---
+# error:
+#   "minmax"  = min/max bars
+#   "iqr"     = q25/q75 bars (true IQR)
+#   "whisker" = q25±1.5*IQR clipped to min/max
+plot_tradeoff_with_error <- function(df,
+                                     centre = c("mean","median"),
+                                     error  = c("minmax","iqr","whisker")) {
+  
+  centre <- match.arg(centre)
+  error  <- match.arg(error)
+  
+  x0 <- paste0("LMA_", centre)
+  y0 <- paste0("Nmass_", centre)
+  
+  df2 <- df %>%
+    mutate(
+      LMA_low = case_when(
+        error == "minmax"  ~ LMA_min,
+        error == "iqr"     ~ LMA_q25,
+        error == "whisker" ~ pmax(LMA_min,  LMA_q25 - 1.5 * LMA_IQR)
+      ),
+      LMA_high = case_when(
+        error == "minmax"  ~ LMA_max,
+        error == "iqr"     ~ LMA_q75,
+        error == "whisker" ~ pmin(LMA_max,  LMA_q75 + 1.5 * LMA_IQR)
+      ),
+      N_low = case_when(
+        error == "minmax"  ~ Nmass_min,
+        error == "iqr"     ~ Nmass_q25,
+        error == "whisker" ~ pmax(Nmass_min, Nmass_q25 - 1.5 * Nmass_IQR)
+      ),
+      N_high = case_when(
+        error == "minmax"  ~ Nmass_max,
+        error == "iqr"     ~ Nmass_q75,
+        error == "whisker" ~ pmin(Nmass_max, Nmass_q75 + 1.5 * Nmass_IQR)
+      )
+    )
+  
+  ggplot(df2, aes(x = .data[[x0]], y = .data[[y0]], colour = PFT, shape = PFT)) +
+    # error bars
+    geom_segment(aes(x = LMA_low, xend = LMA_high,
+                     y = .data[[y0]], yend = .data[[y0]]),
+                 linewidth = 0.5, alpha = 0.7) +
+    geom_segment(aes(x = .data[[x0]], xend = .data[[x0]],
+                     y = N_low, yend = N_high),
+                 linewidth = 0.5, alpha = 0.7) +
+    # points
+    geom_point(size = 3) +
+    scale_shape_manual(values = shape_vals, drop = FALSE) +
+    scale_x_continuous(breaks = x_breaks) +
+    scale_y_continuous(breaks = y_breaks) +
+    theme_bw() +
+    theme(panel.grid = element_blank(),
+          legend.position = "right") +
+    labs(
+      x = expression(LMA~(kg~m^{-2})),
+      y = expression(N[mass]~(g~g^{-1})),
+      title = paste0("Nmass vs LMA: ", centre, " with ", error, " bars")
+    )
+}
+
+
+
+# --- 4A) One plot per summary statistic ---
+stats <- c("mean","median","IQR","min","max")
+stats_2 <- c("mean", "median")
+panel_stats <- wrap_plots(lapply(stats, \(s) plot_stat_point(traits_wide, s)), ncol = 2) +
+  patchwork::plot_layout(guides = "collect") &
+  theme(legend.position = "right")
+panel_stats_2 <- wrap_plots(lapply(stats_2, \(s) plot_stat_point(traits_wide, s)), ncol = 2) +
+  patchwork::plot_layout(guides = "collect") &
+  theme(legend.position = "right")
+panel_stats
+panel_stats_2
+ggsave("tradeoff_all_summary_stats.png", panel_stats, width = 10, height = 10, dpi = 300)
+ggsave("tradeoff_all_summary_stats_2.png", panel_stats_2, width = 7, height = 3, dpi = 300)
+
+for (s in stats) {
+  ggsave(paste0("tradeoff_", s, ".png"),
+         plot_stat_point(traits_wide, s, add_title = FALSE),
+         width = 6, height = 5, dpi = 300)
+}
+
+# --- 4B) “Like the paper” versions ---
+p_mean_minmax <- plot_tradeoff_with_error(traits_wide, centre = "mean",   error = "minmax")
+p_median_iqr  <- plot_tradeoff_with_error(traits_wide, centre = "median", error = "iqr")
+
+p_mean_minmax
+p_median_iqr
+
+ggsave("tradeoff_mean_minmax.png", p_mean_minmax, width = 6, height = 5, dpi = 300)
+ggsave("tradeoff_median_iqr.png",  p_median_iqr,  width = 6, height = 5, dpi = 300)
