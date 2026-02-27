@@ -16,18 +16,18 @@
 
 
 #load packages and data ----
-library(ggplot2)  # ggplot() fortify()
-library(dplyr)  # %>% select() filter() bind_rows()
-library(rgdal)  # readOGR() spTransform()
-library(raster)  # intersect()
-library(ggsn)  # north2() scalebar()
-library(rworldmap)  # getMap()
+library(ggplot2)  
+library(dplyr)  
+library(rgdal)  
+library(raster) 
+library(ggsn)  
+library(rworldmap)  
 library(plotrix)
 library(sf)
 library(rnaturalearth)
 library(lwgeom)
 library(maps)
-library(RColorBrewer) # not using this (atm)
+library(RColorBrewer) 
 library(tidyr)
 library(tidyverse)
 library(patchwork)
@@ -231,12 +231,12 @@ global_map <- ggplot() +
     panel.background = element_rect(color = NA),
     panel.grid = element_line(color = "gray80"),
     legend.position = "right",
-    legend.text = element_text(size = 18),        # Increase size of legend text
-    legend.title = element_text(size = 18)  # Increase size of legend title
+    legend.text = element_text(size = 22),        # Increase size of legend text
+    legend.title = element_text(size = 19)  # Increase size of legend title
   ) +
  # ggtitle("Global Distribution of Individual Plant Traits") +
   theme(
-    text = element_text(size = 12, face = "bold"),
+    text = element_text(size = 20, face = "bold"),
     plot.title = element_text(hjust = 0.5)
   )
 
@@ -318,6 +318,23 @@ ggplot() +
 
 
 
+trait_LMA <- trait_africa %>%
+  filter(TraitName == "Leaf Mass per Area")
+
+trait_Nmass <- trait_africa %>%
+  filter(TraitName == "Leaf nitrogen (N) content per leaf dry mass")
+
+
+trait_summary <- trait_africa %>%
+  group_by(TraitName) %>%
+  summarise(
+    n_obs = n(),
+    n_species = n_distinct(AccSpeciesName),
+    .groups = "drop"
+  )
+
+trait_summary
+
 
 # compare the observed species for Africa observation 
 species_count_africa <- trait_africa %>%
@@ -381,12 +398,22 @@ Multi_trait_map <- ggplot(trait_africa) +
   ) + # Add country borders
   geom_hex(binwidth = 2, alpha=0.8) +
   scale_fill_viridis_c() +
-  facet_wrap(~TraitName, ncol = 4, labeller = label_wrap_gen(width = 20)) +  # Adjust width as needed
+  facet_wrap(~TraitName, ncol = 2) +  # Adjust width as needed
   theme_classic() +
-  theme(strip.text = element_text(size = 15, angle = 0, hjust = 0.9))  # Adjust size and angle as needed
+  theme(strip.text = element_text(size = 28, angle = 0, hjust = 0.9, face = "bold")) + # Adjust size and angle as needed
+  guides(fill = guide_colorbar(
+    barheight = unit(6, "cm"),
+    barwidth  = unit(0.8, "cm"),
+    title.position = "top"
+  )) +
+  theme(
+    legend.title = element_text(size = 18, face = "bold"),
+    legend.text  = element_text(size = 20, face = "bold"),
+    legend.key.height = unit(1.2, "cm"),
+    legend.key.width  = unit(0.8, "cm")
+  )
 
-
-ggsave("Afri_trait_multi_map.png", plot = Multi_trait_map, width = 20, height = 12, dpi = 300, bg = "white")
+ggsave("Afri_trait_multi_map1.png", plot = Multi_trait_map, width = 20, height = 12, dpi = 300, bg = "white")
 
 
 
@@ -624,6 +651,12 @@ Trait_species_with_PFT <- Trait_species_with_PFT %>%
   filter(is.na(Exposition) | Exposition != "in situ")
 
 
+
+#write.csv(Trait_species_with_PFT, "Trait_species_with_PFT.csv", row.names = FALSE)
+
+
+
+
 ## Visualization of data to ascertain the value of PFT classes in my data and what steps can be taken further ----
 # 2. PFT Density Plot----
 # This plot will visualize the density of PFTs in different regions. Could use a hexbin plot or kernel density estimation.
@@ -688,8 +721,8 @@ pft_density <- ggplot() +
     strip.text = element_text(size = 16, face = "bold"),
     axis.text = element_text(size = 7),
     axis.title = element_text(size = 8),
-    legend.title = element_text(size = 12, face = "bold"),
-    legend.text = element_text(size = 12, face = "bold")
+    legend.title = element_text(size = 18, face = "bold"),
+    legend.text = element_text(size = 20, face = "bold")
   )
 
 
@@ -723,17 +756,18 @@ ggsave("histogram_density2.png", plot = histogram_density2, width = 20, height =
 histogram_density <- ggplot(Trait_species_with_PFT, aes(x = StdValue, fill = PFT)) +
   geom_histogram(aes(y = after_stat(count)),
                  bins = 30, position = "identity", alpha = 0.6) +
-  facet_wrap(~ TraitName, scales = "free") +
+  facet_wrap(~ TraitName, scales = "fixed") +
   scale_x_log10() +
   scale_fill_viridis_d() +
   labs(x = "Trait value (log10 scale)", y = "Density") +
-  theme_minimal() +
-  theme(
-    strip.text = element_text(size = 18, face = "bold"),
-    axis.text = element_text(size = 15, face = "bold"),
-    axis.title = element_text(size = 15, face = "bold"),
-    legend.title = element_text(size = 15, face = "bold"),
-    legend.text = element_text(size = 15, face = "bold")
+  theme_classic() +
+  theme(panel.spacing = unit(1.2, "lines"),
+        panel.border = element_rect(color = "black", fill = NA, linewidth = 0.6),
+    strip.text = element_text(size = 28, face = "bold"),
+    axis.text = element_text(size = 22, face = "bold"),
+    axis.title = element_text(size = 22, face = "bold"),
+    legend.title = element_text(size = 20, face = "bold"),
+    legend.text = element_text(size = 24, face = "bold")
   )
 
 
@@ -945,7 +979,7 @@ write.csv(summary_stats, "summary_stats_new.csv", row.names = FALSE)
 
 # 5th LEVEL ----
 
-# plotting tradeoff between LMA and Nmass using all stats measurement ----
+# plotting trade-off between LMA and Nmass using all stats measurement ----
 # --- 1) Reshape summary_stats to wide: 1 row per PFT ---
 x_breaks <- scales::breaks_pretty(n = 6)  # increase n for more ticks
 y_breaks <- scales::breaks_pretty(n = 7)
