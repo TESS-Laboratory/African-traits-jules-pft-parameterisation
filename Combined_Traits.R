@@ -34,6 +34,8 @@ library(patchwork)
 library(viridis)
 library(rgeos)
 library(scales)
+library(stringr)
+
 
 
 # read data ----
@@ -809,6 +811,138 @@ box_plot <- ggplot(Trait_species_with_PFT, aes(x = PFT, y = StdValue, fill = PFT
   )
 
 ggsave("box_plot.png", plot = box_plot, width = 20, height = 12, dpi = 300, bg = "white")
+
+
+
+
+## Violin plots ----
+df <- Trait_species_with_PFT
+
+# Choose a consistent PFT order 
+pft_levels <- c("BET-Tr", "BET-Te", "BDT", "NET", "C3", "C4", "ESH", "DSH")
+
+
+#  JULES global parameter table (wide -> long)
+
+jules_global <- tibble::tribble(
+  ~PFT,     ~LMA,     ~Nmass,
+  "BET-Tr", 0.1039,   0.0170,
+  "BET-Te", 0.1403,   0.0144,
+  "BDT",    0.0823,   0.0210,
+  "NET",    0.2263,   0.0115,
+  "C3",     0.0498,   0.0219,
+  "C4",     0.1370,   0.0113,
+  "ESH",    0.1515,   0.0136,
+  "DSH",    0.0550,   0.0238
+) |>
+  pivot_longer(cols = c(LMA, Nmass), names_to = "trait_key", values_to = "jules_value")
+
+
+#  Make trait_key in  observed data to join to JULES values
+
+df2 <- df |>
+  mutate(
+    PFT = factor(PFT, levels = pft_levels),
+    trait_key = case_when(
+      str_detect(str_to_lower(TraitName), "mass per area|lma") ~ "LMA",
+      str_detect(str_to_lower(TraitName), "nitrogen|nmass")    ~ "Nmass",
+      TRUE ~ NA_character_
+    )
+  ) |>
+  filter(!is.na(trait_key), !is.na(StdValue), StdValue > 0, !is.na(PFT))
+
+# Observed medians (for optional labels and/or a separate layer)
+med_df <- df2 |>
+  group_by(TraitName, trait_key, PFT) |>
+  summarise(median_value = median(StdValue, na.rm = TRUE), .groups = "drop")
+
+# Join JULES global values to each facet/PFT
+jules_df <- df2 |>
+  distinct(TraitName, trait_key, PFT) |>
+  left_join(jules_global, by = c("trait_key", "PFT"))
+
+
+
+
+#  Consistent theme 
+
+theme_pub <- function(base_size = 14) {
+  theme_minimal(base_size = base_size) +
+    theme(
+      panel.grid.minor = element_blank(),
+      strip.text = element_text(size = base_size + 2, face = "bold"),
+      axis.title = element_text(size = base_size, face = "bold"),
+      axis.text  = element_text(size = base_size - 1, face = "bold"),
+      legend.position = "none",
+      plot.title = element_text(size = base_size + 4, face = "bold", hjust = 0.5)
+    )
+}
+
+
+#  Plot: violin + observed median + JULES global value
+
+p_traits_violin <- ggplot(df2, aes(x = PFT, y = StdValue, fill = PFT)) +
+  
+  geom_violin(trim = FALSE, linewidth = 0.25, alpha = 0.85) +
+  
+  geom_point(
+    data = med_df,
+    aes(x = PFT, y = median_value, shape = "Observed median"),
+    inherit.aes = FALSE,
+    fill = "white", colour = "black",
+    size = 3, stroke = 0.8
+  ) +
+  
+  geom_point(
+    data = jules_df,
+    aes(x = PFT, y = jules_value, shape = "JULES global value"),
+    inherit.aes = FALSE,
+    fill = "black", colour = "black",
+    size = 3.2, stroke = 0.5
+  ) +
+  
+  facet_wrap(~TraitName, scales = "free_y") +
+  scale_y_log10() +
+  
+  scale_fill_viridis_d(end = 0.95, guide = "none") +  # remove PFT legend
+  
+  scale_shape_manual(
+    name = NULL,
+    values = c(
+      "Observed median" = 21,
+      "JULES global value" = 23
+    )
+  ) +
+  
+  labs(
+    x = "PFT",
+    y = "Trait value"
+  ) +
+  
+  theme_pub(base_size = 16) +
+  theme(
+    legend.position = "bottom",
+    legend.text = element_text(size = 14, face = "bold")
+  )
+
+p_traits_violin
+
+
+dir.create("figures", showWarnings = FALSE)
+
+ggsave(
+  filename = "figures/trait_violin_median_vs_JULES.png",
+  plot = p_traits_violin,
+  width = 15, height = 9, units = "in", dpi = 600,
+  bg = "white"
+)
+
+ggsave(
+  filename = "figures/trait_violin_median_vs_JULES.pdf",
+  plot = p_traits_violin,
+  width = 15, height = 9, units = "in",
+  device = cairo_pdf
+)
 
 
 
