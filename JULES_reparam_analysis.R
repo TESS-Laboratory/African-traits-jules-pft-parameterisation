@@ -1,7 +1,6 @@
-# ============================================================
-# 3-WAY COMPARISON: Default JULES vs Reparam JULES vs Observed
+# 3-WAY COMPARISON: Default JULES vs Reparam JULES vs Observed ============================================================
 # Across ALL sites, separated by VARIABLE (each figure = 1 var)
-# ============================================================
+
 
 # ----------- Load Required Libraries ---------------
 library(ncdf4)
@@ -309,6 +308,3 @@ for (var in var_list) {
   message("Saved: ", file.path(out_dir, paste0("AllSites_", var, "_3way.png")))
 }
 
-# ============================================================
-# End
-# ============================================================
