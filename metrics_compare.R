@@ -1,15 +1,4 @@
-# ==========================================================
-# PAIRED MODEL PERFORMANCE COMPARISON
-# GPP only
-# - one shared legend
-# - legend shows SHAPES only
-# - hollow markers
-# - 2-row layout
-# - sites ordered by ecosystem type
-# ==========================================================
-
 library(tidyverse)
-library(patchwork)
 
 # ---------------------------
 # Load statistics table
@@ -70,14 +59,15 @@ site_levels <- stats %>%
   pull(site) %>%
   unique()
 
+# reverse so first group appears at the top
 stats <- stats %>%
-  mutate(site = factor(site, levels = site_levels))
+  mutate(site = factor(site, levels = rev(site_levels)))
 
 # ---------------------------
 # Convert to long format
 # ---------------------------
 plot_data <- stats %>%
-  select(site, model, cor, rmse, bias) %>%
+  dplyr::select(site, model, cor, rmse, bias) %>%
   pivot_longer(
     cols = c(cor, rmse, bias),
     names_to = "metric",
@@ -86,116 +76,129 @@ plot_data <- stats %>%
   mutate(
     metric = recode(
       metric,
-      cor = "Correlation",
+      cor  = "Correlation",
       rmse = "RMSE",
       bias = "Bias"
     ),
+    metric = factor(metric, levels = c("Correlation", "RMSE", "Bias")),
     model = recode(
       model,
       Default = "Default",
       Reparam = "Reparameterized"
-    )
+    ),
+    model = factor(model, levels = c("Default", "Reparameterized"))
   )
 
 # ---------------------------
-# Plot function
+# Make segment data
 # ---------------------------
-make_metric_plot <- function(metric_name, show_legend = FALSE) {
-  
-  df <- plot_data %>%
-    filter(metric == metric_name)
-  
-  p <- ggplot(df, aes(x = site, y = value, group = site)) +
-    
-    geom_line(color = "grey75", linewidth = 0.5) +
-    
-    # Default = hollow circle
-    geom_point(
-      data = df %>% filter(model == "Default"),
-      aes(shape = "Default"),
-      size = 3.5,
-      stroke = 1.3,
-      color = "#2C7FB8",
-      fill = NA
-    ) +
-    
-    # Reparameterized = hollow triangle
-    geom_point(
-      data = df %>% filter(model == "Reparameterized"),
-      aes(shape = "Reparameterized"),
-      size = 3.8,
-      stroke = 1.3,
-      color = "#D95F02",
-      fill = NA
-    ) +
-    
-    scale_shape_manual(
-      values = c(
-        "Default" = 21,
-        "Reparameterized" = 24
-      )
-    ) +
-    
-    guides(
-      shape = guide_legend(
-        override.aes = list(
-          color = "black",
-          fill = NA,
-          size = 4,
-          stroke = 1.2
-        )
-      )
-    ) +
-    
-    theme_minimal(base_size = 14) +
-    theme(
-      axis.text.x = element_text(angle = 60, hjust = 1, size = 18, face = "bold"),
-      axis.text.y = element_text(size = 16, face = "bold"),
-      axis.title = element_text(size = 18, face = "bold"),
-      panel.grid.minor = element_blank(),
-      plot.title = element_blank(),
-      legend.position = if (show_legend) "bottom" else "none",
-      legend.title = element_blank(),
-      legend.text = element_text(size = 20, face = "bold")
-    ) +
-    labs(
-      x = "Site",
-      y = metric_name
-    )
-  
-  p
-}
+seg_data <- plot_data %>%
+  dplyr::select(site, metric, model, value) %>%
+  pivot_wider(names_from = model, values_from = value)
 
 # ---------------------------
-# Create panels
-# Only ONE panel keeps the legend
+# Optional: reference line for Bias = 0
 # ---------------------------
-p_cor  <- make_metric_plot("Correlation", show_legend = TRUE)
-p_rmse <- make_metric_plot("RMSE", show_legend = FALSE)
-p_bias <- make_metric_plot("Bias", show_legend = FALSE)
-
-# ---------------------------
-# Combine with one shared collected legend
-# ---------------------------
-final_plot <- ((p_cor | p_rmse) /
-                 (p_bias | plot_spacer())) +
-  plot_layout(guides = "collect") &
-  theme(
-    legend.position = "bottom",
-    legend.title = element_blank(),
-    legend.text = element_text(size = 20, face = "bold")
-  )
-
-# ---------------------------
-# Save
-# ---------------------------
-ggsave(
-  filename = "Model_Performance_Comparison_GPP.png",
-  plot = final_plot,
-  width = 20,
-  height = 18,
-  dpi = 300
+ref_data <- tibble(
+  metric = factor("Bias", levels = c("Correlation", "RMSE", "Bias")),
+  xint = 0
 )
 
-# Show plot
+# ---------------------------
+# Plot
+# ---------------------------
+final_plot <- ggplot() +
+  
+  # zero reference for bias only
+  geom_vline(
+    data = ref_data,
+    aes(xintercept = xint),
+    linetype = "dashed",
+    colour = "grey55",
+    linewidth = 0.6
+  ) +
+  
+  # connecting line between Default and Reparameterized
+  geom_segment(
+    data = seg_data,
+    aes(
+      x = Default,
+      xend = Reparameterized,
+      y = site,
+      yend = site
+    ),
+    colour = "grey75",
+    linewidth = 0.6
+  ) +
+  
+  # Default = hollow circle
+  geom_point(
+    data = plot_data %>% filter(model == "Default"),
+    aes(x = value, y = site, shape = model),
+    size = 3.5,
+    stroke = 1.2,
+    colour = "#2C7FB8",
+    fill = NA
+  ) +
+  
+  # Reparameterized = hollow triangle
+  geom_point(
+    data = plot_data %>% filter(model == "Reparameterized"),
+    aes(x = value, y = site, shape = model),
+    size = 3.8,
+    stroke = 1.2,
+    colour = "#D95F02",
+    fill = NA
+  ) +
+  
+  facet_grid(. ~ metric, scales = "free_x") +
+  
+  scale_shape_manual(
+    values = c(
+      "Default" = 21,
+      "Reparameterized" = 24
+    )
+  ) +
+  
+  guides(
+    shape = guide_legend(
+      override.aes = list(
+        colour = "black",
+        fill = NA,
+        size = 4,
+        stroke = 1.2
+      )
+    )
+  ) +
+  
+  labs(
+    x = NULL,
+    y = NULL
+  ) +
+  
+  theme_minimal(base_size = 14) +
+  theme(
+    strip.text = element_text(size = 18, face = "bold"),
+    axis.text.y = element_text(size = 16, face = "bold"),
+    axis.text.x = element_text(size = 14, face = "bold"),
+    axis.title = element_text(size = 18, face = "bold"),
+    panel.grid.minor = element_blank(),
+    panel.grid.major.y = element_blank(),
+    panel.border = element_rect(colour = "black", fill = NA, linewidth = 0.8),
+    legend.position = "bottom",
+    legend.title = element_blank(),
+    legend.text = element_text(size = 18, face = "bold")
+  )
+
+# show
 final_plot
+
+# save
+ggsave(
+  filename = "Model_Performance_Comparison_GPP_horizontal.png",
+  plot = final_plot,
+  width = 12,
+  height = 12,
+  dpi = 300,
+  bg = "white"
+)

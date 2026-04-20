@@ -415,6 +415,9 @@ Multi_trait_map <- ggplot(trait_africa) +
     legend.key.width  = unit(0.8, "cm")
   )
 
+Multi_trait_map
+
+
 ggsave("Afri_trait_multi_map1.png", plot = Multi_trait_map, width = 20, height = 12, dpi = 300, bg = "white")
 
 
@@ -474,6 +477,8 @@ barplot_comparison <- ggplot(merged_frequency, aes(x = Trait, y = Global_Frequen
         legend.text  = element_text(size = 16, face = "bold"))
 
 
+
+barplot_comparison
 
 ggsave("Barplot_comparison.png", plot = barplot_comparison, width = 20, height = 12, dpi = 300, bg = "white")
 
@@ -576,6 +581,11 @@ density_global <- ggplot(new_trait_workdata, aes(x = StdValue, fill = TRUE)) +
   theme(legend.position = "none")
 
 
+density_africa
+density_global
+
+
+
 
 
 ggsave("density_africa.png", plot = density_africa, width = 20, height = 12, dpi = 300, bg = "white")
@@ -612,6 +622,9 @@ density_combined <- ggplot(combined_data, aes(x = StdValue, fill = Region)) +
        fill = "Region") +
   theme_minimal()+
   theme(strip.text = element_text(size = 15, angle = 0, hjust = 0.9)) + scale_x_log10()
+
+
+density_combined
 
 
 ggsave("new_density_combined.png", plot = density_combined, width = 20, height = 12, dpi = 300, bg = "white")
@@ -695,7 +708,7 @@ Trait_species_with_PFT <- Trait_species_with_PFT %>%
   mutate(PFT_label = case_when(
     PFT == "BDT" ~ "Broadleaf Deciduous Trees",
     PFT == "BET-Tr" ~ "Tropical Broadleaf Evergreen Trees",
-    PFT == "BET-Te" ~ "Tropical Broadleaf Temperate Trees",
+    PFT == "BET-Te" ~ "Temperate Broadleaf Evergreen Trees",
     PFT == "C3" ~ "C3 Grasses",
     PFT == "C4" ~ "C4 Grasses",
     PFT == "DSH" ~ "Deciduous Shrubs",
@@ -728,6 +741,10 @@ pft_density <- ggplot() +
   )
 
 
+pft_density
+
+
+
 ggsave("pft_density.png", plot = pft_density, width = 20, height = 12, dpi = 300, bg = "white")
 
 
@@ -748,6 +765,8 @@ histogram_density2 <- ggplot(Trait_species_with_PFT, aes(x = StdValue, fill = PF
     legend.title = element_text(size = 12, face = "bold"),
     legend.text = element_text(size = 12, face = "bold")
   )
+
+histogram_density2
 
 
 ggsave("histogram_density2.png", plot = histogram_density2, width = 20, height = 12, dpi = 300, bg = "white")
@@ -771,6 +790,9 @@ histogram_density <- ggplot(Trait_species_with_PFT, aes(x = StdValue, fill = PFT
     legend.title = element_text(size = 20, face = "bold"),
     legend.text = element_text(size = 24, face = "bold")
   )
+
+
+histogram_density
 
 
 ggsave("histogram_density.png", plot = histogram_density, width = 20, height = 12, dpi = 300, bg = "white")
@@ -809,6 +831,10 @@ box_plot <- ggplot(Trait_species_with_PFT, aes(x = PFT, y = StdValue, fill = PFT
     legend.title = element_text(size = 15, face = "bold"),
     legend.text = element_text(size = 15, face = "bold")
   )
+
+
+box_plot
+
 
 ggsave("box_plot.png", plot = box_plot, width = 20, height = 12, dpi = 300, bg = "white")
 
@@ -872,7 +898,7 @@ theme_pub <- function(base_size = 14) {
       panel.grid.minor = element_blank(),
       strip.text = element_text(size = base_size + 2, face = "bold"),
       axis.title = element_text(size = base_size, face = "bold"),
-      axis.text  = element_text(size = base_size - 1, face = "bold"),
+      axis.text  = element_text(size = base_size + 3, face = "bold"),
       legend.position = "none",
       plot.title = element_text(size = base_size + 4, face = "bold", hjust = 0.5)
     )
@@ -931,9 +957,9 @@ p_traits_violin
 dir.create("figures", showWarnings = FALSE)
 
 ggsave(
-  filename = "figures/trait_violin_median_vs_JULES.png",
+  filename = "figures/trait_violin_median_vs_JULES2.png",
   plot = p_traits_violin,
-  width = 15, height = 9, units = "in", dpi = 600,
+  width = 18, height = 8, units = "in", dpi = 600,
   bg = "white"
 )
 
@@ -989,6 +1015,8 @@ geom_bar <- ggplot(summary_stats, aes(x = PFT, y = mean, fill = TraitName)) +
   )
 
 
+geom_bar 
+
 ggsave("geom_bar.png", plot = geom_bar, width = 20, height = 12, dpi = 300, bg = "white")
 
 
@@ -1015,6 +1043,9 @@ diversity_curve <- ggplot(pft_count, aes(x = reorder(PFT, -count), y = count, gr
         axis.title = element_text(size = 15, face = "bold"),
         legend.title = element_text(size = 15, face = "bold"),
         legend.text = element_text(size = 15, face = "bold"))
+
+diversity_curve
+
 
 
 ggsave("diversity_curve.png", plot = diversity_curve, width = 20, height = 12, dpi = 300, bg = "white")
@@ -1062,6 +1093,11 @@ trait_bar <- ggplot(trait_distribution, aes(x = PFT, y = count, fill = TraitName
   facet_wrap(~ TraitName, nrow = 3, ncol = 3) +
   scale_fill_viridis_d()
 
+
+
+trait_bar
+
+
 ggsave("trait_bar.png", plot = trait_bar, width = 20, height = 12, dpi = 300, bg = "white")
 
 
@@ -1108,6 +1144,56 @@ print(summary_stats)
 
 
 write.csv(summary_stats, "summary_stats_new.csv", row.names = FALSE)
+
+
+
+
+### Estimating global values for LMA and Nmass ----
+
+# Perform a left join to add PFT information to Trait_species
+Global_Trait_species_with_PFT <- new_trait_workdata %>%
+  dplyr::left_join(PFT_data %>%
+                     dplyr::select(AccSpeciesName, PFT), 
+                   by = "AccSpeciesName")
+
+
+
+# omit NA data. these are species that could not be classified due to limited information and available resources
+
+Global_Trait_species_with_PFT <- Global_Trait_species_with_PFT[!is.na(Global_Trait_species_with_PFT$PFT), ]
+
+
+# remove columns not useful
+Global_Trait_species_with_PFT <- Global_Trait_species_with_PFT %>%
+  sf::st_drop_geometry() %>%
+  dplyr::select(-Region)
+
+
+# Summary statistics
+Global_summary_stats <- Global_Trait_species_with_PFT %>%
+  group_by(PFT, TraitName) %>%
+  summarise(mean = mean(StdValue, na.rm = TRUE),
+            sd = sd(StdValue, na.rm = TRUE))
+
+
+Global_summary_stats2 <- Global_Trait_species_with_PFT %>%
+  group_by(PFT, TraitName) %>%
+  summarise(
+    mean   = mean(StdValue, na.rm = TRUE),
+    median = median(StdValue, na.rm = TRUE),
+    q25    = quantile(StdValue, 0.25, na.rm = TRUE, type = 7),
+    q75    = quantile(StdValue, 0.75, na.rm = TRUE, type = 7),
+    IQR    = q75 - q25,
+    min    = min(StdValue, na.rm = TRUE),
+    max    = max(StdValue, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+# View the results
+print(Global_summary_stats2)
+
+write.csv(Global_summary_stats2, "Global_summary_stats_new.csv", row.names = FALSE)
+
 
 
 
