@@ -1,6 +1,5 @@
-# ============================================================
-# FULL SCRIPT: Vcmax25 from Karina's formula + slope/intercept visual
-# ============================================================
+# FULL SCRIPT: Vcmax25 from Karina's formula + slope/intercept visual ============================================================
+
 
 # Clean session (optional but helpful)
 rm(list = ls())
