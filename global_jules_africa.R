@@ -1,11 +1,13 @@
 # -----------------------------
-# 1. PFT order
-# -----------------------------
+# To use this script - this is a continuation from Combined_Traits scripts
+# as the df used here are created in that script
+# 1. PFT order---------------------
+
 pft_order <- c("BET-Tr", "BET-Te", "BDT", "NET", "C3", "C4", "ESH", "DSH")
 
-# -----------------------------
-# 2. JULES values
-# -----------------------------
+
+# 2. JULES values-----------------------------
+ 
 jules_df <- tibble::tribble(
   ~PFT,     ~LMA,   ~Nmass,
   "BET-Tr", 0.1039, 0.0170,
@@ -18,23 +20,23 @@ jules_df <- tibble::tribble(
   "DSH",    0.0550, 0.0238
 )
 
-# -----------------------------
-# 3. Optional check: inspect trait names and units first
-# -----------------------------
+
+
+# 3. Optional check: inspect trait names and units first -----------------------------
+
 dplyr::count(Trait_species_with_PFT, TraitName, UnitName, sort = TRUE)
 dplyr::count(Global_Trait_species_with_PFT, TraitName, UnitName, sort = TRUE)
 
-# -----------------------------
-# 4. Helper for quantiles
-# -----------------------------
+
+# 4. Helper for quantiles---------------------
+
 qfun <- function(x, p) {
   unname(stats::quantile(x, probs = p, na.rm = TRUE, type = 7))
 }
 
-# -----------------------------
-# 5. Build PFT-level summaries from raw data
-#    Adjust the trait matching here only if needed
-# -----------------------------
+
+# 5. Build PFT-level summaries from raw data-----------------
+#    Adjust the trait matching here only if needed 
 make_trait_summary <- function(df, source_name) {
   df %>%
     dplyr::mutate(
@@ -67,9 +69,9 @@ make_trait_summary <- function(df, source_name) {
 africa_sum <- make_trait_summary(Trait_species_with_PFT, "Africa TRY")
 global_sum <- make_trait_summary(Global_Trait_species_with_PFT, "Global TRY")
 
-# -----------------------------
-# 6. JULES in same structure
-# -----------------------------
+
+# 6. JULES in same structure-------------------------
+
 jules_sum <- jules_df %>%
   dplyr::transmute(
     PFT,
@@ -97,9 +99,9 @@ plot_df <- dplyr::bind_rows(africa_sum, global_sum, jules_sum) %>%
 spread_df <- plot_df %>%
   dplyr::filter(source != "JULES")
 
-# -----------------------------
-# 7. Prepare plotting data
-# -----------------------------
+
+# 7. Prepare plotting data---------------------
+
 plot_df <- dplyr::bind_rows(africa_sum, global_sum, jules_sum) %>%
   dplyr::mutate(
     PFT = factor(PFT, levels = pft_order),
@@ -109,9 +111,9 @@ plot_df <- dplyr::bind_rows(africa_sum, global_sum, jules_sum) %>%
 spread_df <- plot_df %>%
   dplyr::filter(source != "JULES")
 
-# -----------------------------
-# 8. Plot
-# -----------------------------
+
+# 8. Plot----------------------
+
 p_pft_traits <- ggplot() +
   
   # outer spread: 10th to 90th percentile
