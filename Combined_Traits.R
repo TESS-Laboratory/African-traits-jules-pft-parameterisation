@@ -213,37 +213,45 @@ data_robinson <- st_transform(data_sf, crs = "+proj=robin")
 
 # Plot the heat map with traits
 global_map <- ggplot() +
-  geom_sf(data = world_robinson, fill = "gray95", color = "gray80") +
+  geom_sf(data = world_robinson, fill = "gray95", color = "gray80", linewidth = 0.2) +
   geom_sf(data = data_robinson, aes(color = TraitName, size = TraitCount), alpha = 0.7) +
   scale_color_viridis_d(
-    option = "plasma", 
+    option = "plasma",
     name = "Trait",
+    labels = c("LMA", "Nmass"),
     guide = guide_legend(
-      override.aes = list(shape = 15, size = 5) # Use squares and adjust size
+      override.aes = list(shape = 15, size = 5)
     )
   ) +
   scale_size_continuous(
-    range = c(1, 15),  # Adjust point size range
-    breaks = c(100, 1000, 3000, 5000, 7000, 10000, 15000, 20000),  # Specify custom breaks
-    labels = c("100", "1k", "3k", "5k", "7k", "10k", "15k", "20k"),  # Format labels for clarity
-    name = "Observation Count"
+    range = c(1, 12),
+    breaks = c(100, 1000, 3000, 5000, 7000, 10000),
+    labels = c("100", "1k", "3k", "5k", "7k", "10k"),
+    name = "Observation\nCount"
   ) +
+  coord_sf(expand = TRUE) +
   theme_minimal() +
   theme(
     panel.background = element_rect(color = NA),
     panel.grid = element_line(color = "gray80"),
     legend.position = "right",
-    legend.text = element_text(size = 22),        # Increase size of legend text
-    legend.title = element_text(size = 19)  # Increase size of legend title
-  ) +
- # ggtitle("Global Distribution of Individual Plant Traits") +
-  theme(
+    legend.text = element_text(size = 24),
+    legend.title = element_text(size = 22, face = "bold"),
     text = element_text(size = 20, face = "bold"),
-    plot.title = element_text(hjust = 0.5)
+    plot.title = element_text(hjust = 0.5),
+    plot.margin = margin(2, 2, 2, 2, "pt"),
+    legend.margin = margin(0, 0, 0, 0),
+    legend.box.margin = margin(0, 0, 0, 0),
+    #legend.box.spacing = unit(0.6, "cm"),
+    axis.title = element_blank(),
+    axis.text = element_blank(),
+    axis.ticks = element_blank()
   )
 
+global_map
 
-ggsave("trait_global_map22.png", plot = global_map, width = 18, height = 10, dpi = 300, bg = "white")
+
+ggsave("trait_global_map22.png", plot = global_map, width = 20, height = 10, dpi = 600, bg = "white")
 
 
 
@@ -392,33 +400,67 @@ trait_plots_africa_combined
 
 
 ## Make Africa map of traits ----
-Multi_trait_map <- ggplot(trait_africa) +
-  aes(x = Longitude, y = Latitude) +
+## Make Africa map of traits ----
+
+Multi_trait_map <- ggplot(trait_africa, aes(x = Longitude, y = Latitude)) +
   geom_sf(
-    data = africa, aes(geometry = geometry),
-    fill = NA, color = "black", inherit.aes = FALSE, lwd = 0.2
-  ) + # Add country borders
-  geom_hex(binwidth = 2, alpha=0.8) +
-  scale_fill_viridis_c() +
-  facet_wrap(~TraitName, ncol = 2) +  # Adjust width as needed
+    data = africa,
+    aes(geometry = geometry),
+    fill = NA,
+    color = "black",
+    inherit.aes = FALSE,
+    linewidth = 0.25
+  ) +
+  geom_hex(binwidth = 2, alpha = 0.85) +
+  scale_fill_viridis_c(
+    name = "Observation\ncount"
+  ) +
+  facet_wrap(
+    ~TraitName,
+    ncol = 2,
+    labeller = as_labeller(c(
+      "Leaf Mass per Area" = "LMA",
+      "Leaf nitrogen (N) content per leaf dry mass" = "Nmass"
+    ))
+  ) +
+  coord_sf(
+    xlim = c(-25, 55),
+    ylim = c(-38, 40),
+    expand = FALSE
+  ) +
+  labs(
+    x = "Longitude",
+    y = "Latitude"
+  ) +
   theme_classic() +
-  theme(strip.text = element_text(size = 28, angle = 0, hjust = 0.9, face = "bold")) + # Adjust size and angle as needed
-  guides(fill = guide_colorbar(
-    barheight = unit(6, "cm"),
-    barwidth  = unit(0.8, "cm"),
-    title.position = "top"
-  )) +
+  guides(
+    fill = guide_colorbar(
+      barheight = unit(5.5, "cm"),
+      barwidth  = unit(0.8, "cm"),
+      title.position = "top"
+    )
+  ) +
   theme(
-    legend.title = element_text(size = 18, face = "bold"),
-    legend.text  = element_text(size = 20, face = "bold"),
-    legend.key.height = unit(1.2, "cm"),
-    legend.key.width  = unit(0.8, "cm")
+    strip.text = element_text(
+      size = 30,
+      face = "bold",
+      margin = margin(2, 2, 2, 2)
+    ),
+    axis.title = element_text(size = 24, face = "bold"),
+    axis.text  = element_text(size = 24, face = "bold"),
+    legend.title = element_text(size = 26, face = "bold"),
+    legend.text  = element_text(size = 26, face = "bold"),
+    legend.key.height = unit(1.6, "cm"),
+    legend.key.width  = unit(1.0, "cm"),
+    panel.spacing = unit(0.2, "lines"),
+    plot.margin = margin(2, 2, 2, 2, "pt")
   )
+
 
 Multi_trait_map
 
 
-ggsave("Afri_trait_multi_map1.png", plot = Multi_trait_map, width = 20, height = 12, dpi = 300, bg = "white")
+ggsave("Afri_trait_multi_map1.png", plot = Multi_trait_map, width = 21, height = 13, dpi = 300, bg = "white")
 
 
 
